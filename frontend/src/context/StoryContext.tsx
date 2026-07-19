@@ -364,11 +364,30 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     try {
+      console.log(`[StoryContext] Optimistically setting chapter ${chapterId} status to text_ready / awaiting-synthesis...`);
+      setWorlds((prev) =>
+        prev.map((world) => {
+          if (world.id !== activeWorldId) return world;
+          return {
+            ...world,
+            chapters: world.chapters.map((ch) => {
+              if (ch.id !== chapterId) return ch;
+              return { 
+                ...ch, 
+                status: "text_ready",
+                illustrationSeed: "awaiting-synthesis" 
+              };
+            })
+          };
+        })
+      );
+
       const body: Record<string, string> = {};
       if (options?.narrativeContext) body.narrativeContext = options.narrativeContext;
       if (options?.styleLock) body.styleLock = options.styleLock;
       if (options?.aspectRatio) body.aspectRatio = options.aspectRatio;
 
+      console.log(`[StoryContext] Sending regenerate request for chapter ${chapterId}...`);
       const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters/${chapterId}/regenerate-image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -379,19 +398,16 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const errBody = await response.json();
         const errMsg = errBody.error ?? errBody.message ?? "Failed to regenerate chapter image";
 
-        // Gracefully handle minted chapter race condition:
-        // The chapter was minted between clicking the button and the backend processing it.
-        // This is not an actionable error — the image is on-chain and can't be changed.
         if (response.status === 409 && errMsg.toLowerCase().includes("minted")) {
           console.warn("Regenerate skipped — chapter was minted before the request completed.");
-          // Background sync poll will sync the state.
           return;
         }
 
         throw new Error(errMsg);
       }
 
-      // Don't fetch immediately — the background sync poll picks up the new image.
+      console.log(`[StoryContext] Request succeeded, running immediate fetchWorld for sync...`);
+      await fetchWorld(activeWorldId);
     } catch (error) {
       // Only log as error if it's not a gracefully-handled minted race condition
       if (error instanceof Error && error.message.toLowerCase().includes("minted")) {
@@ -447,8 +463,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     try {
-      // styleLock and aspectRatio are persisted locally in the workspace store;
-      // the backend chapter creation endpoint doesn't consume them via query params
+      console.log(`[StoryContext] Requesting new draft chapter creation for world ${activeWorldId}...`);
       const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -459,7 +474,8 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         throw new Error(err.error ?? "Failed to create chapter");
       }
 
-      // Don't fetch immediately — the background sync poll picks up the update.
+      console.log(`[StoryContext] Draft chapter created, fetching updated world details...`);
+      await fetchWorld(activeWorldId);
     } catch (error) {
       console.error("Error drafting new chapter:", error);
     }
