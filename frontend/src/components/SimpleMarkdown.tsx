@@ -10,7 +10,8 @@ import React from "react";
  * - Paragraph text
  */
 export function SimpleMarkdown({ text }: { text: string }) {
-  const lines = text.split("\n");
+  const cleanText = text.replace(/\\n/g, "\n");
+  const lines = cleanText.split("\n");
   return (
     <div
       data-testid="simple-markdown"

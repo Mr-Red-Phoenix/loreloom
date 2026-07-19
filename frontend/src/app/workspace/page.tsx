@@ -864,7 +864,7 @@ function WorkspaceContent() {
                 seed={selectedChapter?.illustrationSeed || "awaiting-synthesis"}
                 onRetrigger={selectedChapter?.isMinted ? undefined : handleVisualSynthesisRetrigger}
                 previousSeed={lastImageSeed || undefined}
-                isGenerating={generating}
+                isGenerating={generating && selectedChapter?.status === "text_ready"}
                 progress={genProgress}
               />
             </div>
@@ -903,7 +903,7 @@ function WorkspaceContent() {
                     seed={selectedChapter.illustrationSeed} 
                     onRetrigger={selectedChapter.isMinted ? undefined : handleVisualSynthesisRetrigger} 
                     previousSeed={lastImageSeed || undefined} 
-                    isGenerating={generating}
+                    isGenerating={generating && selectedChapter?.status === "text_ready"}
                     progress={genProgress}
                   />
                 </div>

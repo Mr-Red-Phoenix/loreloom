@@ -119,6 +119,13 @@ export async function markJobBlocked(job: GenerationJobRow, error: Error) {
   if (updateError) {
     throw new Error(updateError.message);
   }
+
+  if (job.chapter_id) {
+    await supabase
+      .from("chapters")
+      .update({ status: "failed" })
+      .eq("id", job.chapter_id);
+  }
 }
 
 export async function markJobSucceeded(jobId: string, checkpoint?: JsonValue) {
@@ -159,6 +166,13 @@ export async function markJobFailed(job: GenerationJobRow, error: unknown) {
 
   if (updateError) {
     throw new Error(updateError.message);
+  }
+
+  if (!shouldRetry && job.chapter_id) {
+    await supabase
+      .from("chapters")
+      .update({ status: "failed" })
+      .eq("id", job.chapter_id);
   }
 }
 
