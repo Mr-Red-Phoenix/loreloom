@@ -174,7 +174,7 @@ function mapBackendWorld(backendWorld: BackendWorldRow, backendChapters: Backend
       number: ch.chapter_index,
       title: `Chapter ${ch.chapter_index}`,
       storyText: ch.content || "AI is weaving the chapter story...",
-      illustrationSeed: ch.image_url || backendWorld.reference_image_url || "nexus-core",
+      illustrationSeed: ch.image_url || "awaiting-synthesis",
       isMinted: ch.status === "minted" || ch.chapter_token_id !== null,
       prompt: ch.scene_description || "Generated beat",
       status: ch.status
