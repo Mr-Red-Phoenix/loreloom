@@ -1,24 +1,24 @@
 {
-  "name": "loreloom",
+  "name": "loreloom-monorepo",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "backend/apps/api",
+    "backend/apps/web",
+    "backend/contracts"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.2.10",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "dev:frontend": "npm run dev -w loreloom-frontend",
+    "dev:backend": "npm run dev -w @loreloom/api",
+    "dev:worker": "npm run dev:worker -w @loreloom/api",
+    "dev": "concurrently -n frontend,backend,worker -c green,magenta,yellow \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:worker\"",
+    "build:frontend": "npm run build -w loreloom-frontend",
+    "build:backend": "npm run build -w @loreloom/api",
+    "install:all": "npm install"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.10",
-    "typescript": "^5"
+    "concurrently": "^8.2.2"
   }
 }

@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Loreloom 🌌
 
-## Getting Started
+Loreloom is an advanced autonomous storytelling sandbox. Create entire worlds, meet dynamic protagonists, weave interactive narratives, and mint your lore as unique on-chain digital relics.
 
-First, run the development server:
+## 🚀 Features
 
+- **Genesis Engine:** Auto-generate characters, sheets, and reference images.
+- **Narrative Engine:** Continuously generate story chapters with smart memory auto-synchronization (detects character changes like names and saves them to the database).
+- **Awaiting Canvas & 3D Loader:** View real-time simulated visual rendering with an advanced 3D AntiGravity wireframe synthesizer.
+- **On-chain Lore Minting:** Mint your completed story chapters as digital relics.
+- **Resilient Worker:** Self-healing background worker loop that automatically handles network fluctuations or API connection drops without crashing.
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js (Turbopack), TailwindCSS, Framer Motion
+- **Backend:** Node.js, Express, TSX, Supabase Database
+- **Background Worker:** Robust Job Queue system with automatic failure tolerance
+- **Blockchain:** Thirdweb SDK
+
+## ⚙️ Quick Start
+
+### 1. Configure Environments
+Copy the example environment file:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
+```
+Fill in the variables in `.env` (Supabase keys, AI Provider API keys, etc.).
+
+### 2. Install Dependencies
+```bash
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run Development Servers
+Start frontend, backend, and background worker concurrently:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
