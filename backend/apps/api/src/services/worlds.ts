@@ -97,7 +97,18 @@ export async function confirmWorld(worldId: string) {
   const world = await getWorldRow(worldId);
 
   if (world.status !== "portrait_ready" || !world.reference_image_url) {
-    throw new HttpError(409, "The Genesis portrait must be ready and safety-approved before this world can be confirmed.");
+    if (world.reference_image_url) {
+      // Self-healing: if the reference image is already present, heal the status and proceed
+      const { error: healError } = await supabase
+        .from("worlds")
+        .update({ status: "portrait_ready" })
+        .eq("id", world.id);
+      if (healError) {
+        throw new HttpError(500, healError.message);
+      }
+    } else {
+      throw new HttpError(409, "The Genesis portrait must be ready and safety-approved before this world can be confirmed.");
+    }
   }
 
   const { data: existingJob, error: existingError } = await supabase

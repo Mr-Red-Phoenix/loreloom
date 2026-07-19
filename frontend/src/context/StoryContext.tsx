@@ -204,8 +204,12 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return [mapped, ...filtered];
       });
       return true;
-    } catch (error) {
-      console.warn("Error fetching world details:", error);
+    } catch (error: any) {
+      if (error?.message === "Failed to fetch") {
+        console.warn(`[StoryContext] Network offline or suspended while fetching world ${id}.`);
+      } else {
+        console.warn("Error fetching world details:", error);
+      }
       return false;
     }
   }, []);

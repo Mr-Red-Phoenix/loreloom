@@ -104,27 +104,31 @@ async function pingHuggingFace(): Promise<boolean> {
 }
 
 async function generateImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {
-  console.log(`[images] Simulating image generation for prompt: "${input.prompt.slice(0, 60)}..."`);
-  console.log("[images] Running reachability pings to configured image servers to save quota...");
-
-  let nvidiaReachable = false;
-  let hfReachable = false;
+  console.log(`[images] Constructing image generation for prompt: "${input.prompt.slice(0, 100)}..."`);
 
   if (config.nvidia.apiKey) {
-    nvidiaReachable = await pingNvidia();
+    try {
+      console.log("[images] Attempting image generation via NVIDIA API...");
+      const url = await generateNvidiaImage(input);
+      console.log("[images] NVIDIA image generation succeeded:", url);
+      return url;
+    } catch (err) {
+      console.error("[images] NVIDIA generation failed, falling back...", err);
+    }
   }
+
   if (config.huggingface.apiKey) {
-    hfReachable = await pingHuggingFace();
+    try {
+      console.log("[images] Attempting image generation via Hugging Face API...");
+      const url = await generateHuggingFaceImage(input);
+      console.log("[images] Hugging Face image generation succeeded:", url);
+      return url;
+    } catch (err) {
+      console.error("[images] Hugging Face generation failed, falling back...", err);
+    }
   }
 
-  if (config.nvidia.apiKey && !nvidiaReachable) {
-    console.warn("[images] NVIDIA is configured but reachability ping failed.");
-  }
-  if (config.huggingface.apiKey && !hfReachable) {
-    console.warn("[images] Hugging Face is configured but reachability ping failed.");
-  }
-
-  // Always return a placeholder image to save quota, while confirming API reachability
+  console.warn("[images] All image generation providers failed or are not configured. Returning placeholder.");
   return placeholderImage(input.prompt);
 }
 
@@ -133,7 +137,8 @@ async function generateNvidiaImage(input: { prompt: string; name: string; aspect
     throw new ProviderSetupError("NVIDIA", "NVIDIA_API_KEY");
   }
 
-  const { width, height } = aspectToDimensions(input.aspectRatio ?? "1:1");
+  const width = 1024;
+  const height = 1024;
   const url = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell";
 
   const response = await fetch(url, {

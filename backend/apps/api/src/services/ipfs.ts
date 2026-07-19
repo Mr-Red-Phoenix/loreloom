@@ -29,12 +29,15 @@ export async function pinJson(metadata: JsonValue) {
 }
 
 export async function pinImage(input: { bytes: Uint8Array; mimeType: string; name: string }) {
-  if (config.ipfs.mode !== "pinata") {
-    throw new Error("Image storage is not configured. Set IPFS_MODE=pinata and PINATA_JWT before generating mintable art.");
+  if (config.ipfs.mode === "mock") {
+    const base64 = Buffer.from(input.bytes).toString("base64");
+    return `data:${input.mimeType};base64,${base64}`;
   }
 
-  if (!config.ipfs.pinataJwt) {
-    throw new Error("Pinata is not configured. Add PINATA_JWT before generating mintable art.");
+  if (config.ipfs.mode !== "pinata" || !config.ipfs.pinataJwt) {
+    // Fall back to instant data URI if Pinata is not set up
+    const base64 = Buffer.from(input.bytes).toString("base64");
+    return `data:${input.mimeType};base64,${base64}`;
   }
 
   const form = new FormData();

@@ -330,17 +330,17 @@ function WorkspaceContent() {
         // If chapter is in draft, we always poll for the text
         if (ch.status === "draft" || !ch.storyText) return true;
         // If chapter is text_ready, we only poll if generating is true (actively generating image)
-        if (ch.status === "text_ready" && ch.id === selectedChapterIdRef.current) {
-          return generatingRef.current;
+        if (ch.status === "text_ready" && ch.id === selectedChapterId) {
+          return generating;
         }
         return false;
       });
     };
 
-    const interval = setInterval(async () => {
+    const pollOnce = async () => {
       if (!isMounted) return;
       const needsPoll = checkNeedsPoll();
-      console.log(`[workspace-poll] Stable check - needsPoll: ${needsPoll}, generating: ${generatingRef.current}`);
+      console.log(`[workspace-poll] Tick - needsPoll: ${needsPoll}, generating: ${generating}`);
 
       if (needsPoll) {
         try {
@@ -349,18 +349,23 @@ function WorkspaceContent() {
         } catch (err) {
           console.warn("[workspace-poll] Poll error:", err);
         }
-      } else if (generatingRef.current) {
+      } else if (generating) {
         console.log("[workspace-poll] Generation completed. Setting generating=false.");
         ws.setGenerating(false);
       }
-    }, 3000);
+    };
+
+    // Trigger immediate poll so UI reacts instantly without waiting 3 seconds
+    pollOnce();
+
+    const interval = setInterval(pollOnce, 3000);
 
     return () => {
       isMounted = false;
       clearInterval(interval);
       console.log("[workspace-poll] Cleaning up stable poll interval.");
     };
-  }, [activeWorldIdStr, fetchWorld]);
+  }, [activeWorldIdStr, fetchWorld, generating, selectedChapterId]);
 
   // ── Derived data ──
   const orderedChapters = activeWorld
@@ -370,6 +375,7 @@ function WorkspaceContent() {
     : [];
   const selectedChapter = orderedChapters.find((c) => c.id === selectedChapterId) || orderedChapters[orderedChapters.length - 1] || null;
   const chapterIndex = orderedChapters.findIndex((c) => c.id === selectedChapter?.id);
+  const isWeavingText = generating && selectedChapter?.status === "draft";
 
   // Reset local narrative text when chapter changes
   useEffect(() => {
@@ -817,19 +823,19 @@ function WorkspaceContent() {
                 ))}
                 <motion.button
                   type="submit"
-                  disabled={!newChapterPrompt.trim() || generating || isRefiningNarrative}
-                  whileTap={newChapterPrompt.trim() && !generating && !isRefiningNarrative ? { scale: [1, 0.94, 1], transition: { duration: 0.3 } } : undefined}
+                  disabled={!newChapterPrompt.trim() || isWeavingText || isRefiningNarrative}
+                  whileTap={newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? { scale: [1, 0.94, 1], transition: { duration: 0.3 } } : undefined}
                   style={{
                     ...s.narrativeWeaveBtn,
                     background: isGenerateImageIntent(newChapterPrompt)
                       ? "linear-gradient(135deg, rgba(0,214,255,0.2), rgba(176,38,255,0.12))"
                       : "linear-gradient(135deg, rgba(176,38,255,0.2), rgba(0,214,255,0.12))",
                     borderColor: isGenerateImageIntent(newChapterPrompt) ? "rgba(0,214,255,0.35)" : "rgba(176,38,255,0.35)",
-                    opacity: newChapterPrompt.trim() && !generating && !isRefiningNarrative ? 1 : 0.4,
-                    cursor: newChapterPrompt.trim() && !generating && !isRefiningNarrative ? "pointer" : "default",
+                    opacity: newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? 1 : 0.4,
+                    cursor: newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? "pointer" : "default",
                   }}
                 >
-                  {(generating || isRefiningNarrative) ? (
+                  {(isWeavingText || isRefiningNarrative) ? (
                     <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} style={{ display: "inline-flex" }}>
                       <Loader2 size={11} />
                     </motion.span>
@@ -838,7 +844,7 @@ function WorkspaceContent() {
                   ) : (
                     <Sparkles size={11} />
                   )}
-                  <span>{generating ? "Weaving..." : isRefiningNarrative ? "Editing..." : isGenerateImageIntent(newChapterPrompt) ? "Render" : selectedChapter?.storyText ? "Edit" : "Weave"}</span>
+                  <span>{isWeavingText ? "Weaving..." : isRefiningNarrative ? "Editing..." : isGenerateImageIntent(newChapterPrompt) ? "Render" : selectedChapter?.storyText ? "Edit" : "Weave"}</span>
                 </motion.button>
               </div>
             </div>
