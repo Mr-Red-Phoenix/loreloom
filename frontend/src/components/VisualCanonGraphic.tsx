@@ -77,7 +77,6 @@ export function VisualCanonGraphic({
         ) : (
           <div style={{ width: "100%", height: "100%", background: "rgba(0,0,0,0.1)" }} />
         )}
-        {onRetrigger && <VisualSynthesisOverlay onRetrigger={onRetrigger} />}
       </div>
     );
   }
@@ -90,14 +89,11 @@ export function VisualCanonGraphic({
           alt="Visual Synthesis Render"
           style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px", display: "block" }}
         />
-        {onRetrigger && <VisualSynthesisOverlay onRetrigger={onRetrigger} />}
       </div>
     );
   }
 
   return (
-    <div data-testid="vcg-core" style={{ width: "100%", height: "100%", position: "relative", background: "rgba(0,0,0,0.1)", borderRadius: "10px" }}>
-      {onRetrigger && <VisualSynthesisOverlay onRetrigger={onRetrigger} />}
-    </div>
+    <div data-testid="vcg-core" style={{ width: "100%", height: "100%", position: "relative", background: "rgba(0,0,0,0.1)", borderRadius: "10px" }} />
   );
 }

@@ -200,6 +200,15 @@ function WorkspaceContent() {
   const [showGenConfirm, setShowGenConfirm] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const prevChaptersRef = useRef<any[]>([]);
+  const activeWorldRef = useRef(activeWorld);
+  const selectedChapterIdRef = useRef(selectedChapterId);
+  const generatingRef = useRef(generating);
+
+  useEffect(() => {
+    activeWorldRef.current = activeWorld;
+    selectedChapterIdRef.current = selectedChapterId;
+    generatingRef.current = generating;
+  }, [activeWorld, selectedChapterId, generating]);
 
   // Dismiss toast after 4s
   useEffect(() => {
@@ -309,53 +318,49 @@ function WorkspaceContent() {
   }, [activeWorld, chapterOrder.length]);
 
   // Polling
+  const activeWorldIdStr = activeWorld?.id;
   useEffect(() => {
-    if (!activeWorld || !activeWorld.id || activeWorld.id.startsWith("world-neo-") || activeWorld.id.startsWith("world-aetheria")) return;
+    if (!activeWorldIdStr || activeWorldIdStr.startsWith("world-neo-") || activeWorldIdStr.startsWith("world-aetheria")) return;
     let isMounted = true;
-    
-    console.log(`[workspace-poll] Checking chapters in world ${activeWorld.id} (total: ${activeWorld.chapters.length})`);
-    activeWorld.chapters.forEach((ch) => {
-      console.log(`  - Chapter ${ch.number} status: "${ch.status || "N/A"}", image: "${ch.illustrationSeed ? ch.illustrationSeed.slice(0, 45) + '...' : 'null'}"`);
-    });
 
-    const needsPoll = activeWorld.chapters.some((ch) => {
-      // If chapter is in draft, we always poll for the text
-      if (ch.status === "draft" || !ch.storyText) return true;
-      // If chapter is text_ready, we only poll if generating is true (actively generating image)
-      if (ch.status === "text_ready" && ch.id === selectedChapter?.id) {
-        return generating;
-      }
-      return false;
-    });
-    console.log(`[workspace-poll] needsPoll evaluated to: ${needsPoll}`);
-
-    if (!needsPoll) { 
-      console.log("[workspace-poll] Generation finished. Setting generating=false.");
-      ws.setGenerating(false); 
-      return; 
-    }
-    
-    console.log("[workspace-poll] Generation in progress. Setting generating=true and starting polling interval...");
-    ws.setGenerating(true);
-    
-    const interval = setInterval(async () => {
-      try { 
-        if (isMounted) {
-          console.log("[workspace-poll] Fetching updated world state from server...");
-          await fetchWorld(activeWorld.id); 
+    const checkNeedsPoll = () => {
+      const currentWorld = activeWorldRef.current;
+      if (!currentWorld) return false;
+      return currentWorld.chapters.some((ch) => {
+        // If chapter is in draft, we always poll for the text
+        if (ch.status === "draft" || !ch.storyText) return true;
+        // If chapter is text_ready, we only poll if generating is true (actively generating image)
+        if (ch.status === "text_ready" && ch.id === selectedChapterIdRef.current) {
+          return generatingRef.current;
         }
-      } catch (err) { 
-        console.warn("[workspace-poll] Poll error:", err); 
-      }
-    }, 2000);
-    
-    return () => { 
-      isMounted = false; 
-      clearInterval(interval); 
-      console.log("[workspace-poll] Cleaning up poll interval and setting generating=false.");
-      ws.setGenerating(false); 
+        return false;
+      });
     };
-  }, [activeWorld, fetchWorld]);
+
+    const interval = setInterval(async () => {
+      if (!isMounted) return;
+      const needsPoll = checkNeedsPoll();
+      console.log(`[workspace-poll] Stable check - needsPoll: ${needsPoll}, generating: ${generatingRef.current}`);
+
+      if (needsPoll) {
+        try {
+          console.log("[workspace-poll] Fetching updated world state from server...");
+          await fetchWorld(activeWorldIdStr);
+        } catch (err) {
+          console.warn("[workspace-poll] Poll error:", err);
+        }
+      } else if (generatingRef.current) {
+        console.log("[workspace-poll] Generation completed. Setting generating=false.");
+        ws.setGenerating(false);
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      console.log("[workspace-poll] Cleaning up stable poll interval.");
+    };
+  }, [activeWorldIdStr, fetchWorld]);
 
   // ── Derived data ──
   const orderedChapters = activeWorld
