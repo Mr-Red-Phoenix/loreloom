@@ -186,7 +186,13 @@ async function processChapterGenerateJob(job: GenerationJobRow) {
     await updateJobCheckpoint(job.id, { ai: generationCheckpoint(generation, validationAttempt) });
   }
 
-  await markJobSucceeded(job.id, { status: "text_ready" });
+  const imageJob = await enqueueJobIfMissing({
+    jobType: "chapter.image",
+    worldId: world.id,
+    chapterId: chapter.id
+  });
+
+  await markJobSucceeded(job.id, { status: "text_ready", nextJobId: imageJob.id });
 }
 
 async function processChapterImageJob(job: GenerationJobRow) {

@@ -92,7 +92,8 @@ export async function generateStructured(input: StructuredGenerateInput): Promis
       error instanceof ProviderRequestError &&
       isTransientProviderError(error)
     ) {
-      return generateStructuredWithProvider("nvidia", { ...input, provider: "nvidia", allowNvidiaFallback: false });
+      console.warn("[text] Gemini transient failure, falling back to OpenRouter instead of NVIDIA due to NVIDIA outage...");
+      return generateStructuredWithProvider("openrouter", { ...input, provider: "openrouter", allowNvidiaFallback: false });
     }
 
     throw error;

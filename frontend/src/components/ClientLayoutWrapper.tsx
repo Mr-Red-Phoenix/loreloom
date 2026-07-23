@@ -7,8 +7,10 @@ import { Navbar } from "./Navbar";
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isWorkspace = pathname?.startsWith("/workspace");
+  const isDashboard = pathname?.startsWith("/dashboard");
+  const isAuthRoute = pathname?.startsWith("/login") || pathname?.startsWith("/signup");
 
-  if (isWorkspace) {
+  if (isWorkspace || isDashboard || isAuthRoute) {
     return <>{children}</>;
   }
 

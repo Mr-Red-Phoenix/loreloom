@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStory } from "../../context/StoryContext";
+import { SidebarSectionDividersDemo } from "../../components/SidebarSectionDividers";
 import { 
   Home, 
   Folder, 
@@ -67,139 +68,8 @@ export default function DashboardPage() {
       {/* 1px Blueprint Grid Anchoring the standard UI */}
       <div className="blueprint-grid" />
 
-      {/* LEFT SIDEBAR - SPATIAL MINIMALIST */}
-      <motion.div 
-        animate={{ width: isSidebarOpen ? 240 : 80 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        style={{...styles.sidebar, overflow: "hidden", display: "flex", flexDirection: "column", flexShrink: 0}}
-      >
-        {/* Collapse Toggle at the uppermost part */}
-        <div 
-          style={{ 
-            display: "flex", 
-            justifyContent: isSidebarOpen ? "flex-end" : "center", 
-            padding: "16px 24px 8px 24px", 
-            cursor: "pointer", 
-            color: "var(--text-muted)",
-            transition: "color 0.2s ease"
-          }}
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          onMouseEnter={(e) => e.currentTarget.style.color = "var(--text-primary)"}
-          onMouseLeave={(e) => e.currentTarget.style.color = "var(--text-muted)"}
-        >
-          {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-        </div>
-
-        <div style={{...styles.navSection, padding: isSidebarOpen ? "0 12px" : "0 8px"}}>
-          <div style={{ ...styles.sidebarLinkActive, justifyContent: isSidebarOpen ? "flex-start" : "center" }}>
-            <Home size={16} style={{ color: "var(--accent-purple)", minWidth: "16px" }} />
-            {isSidebarOpen && <span style={{ color: "#fff", whiteSpace: "nowrap" }}>Home</span>}
-          </div>
-
-          <div style={styles.collapsibleContainer}>
-            <div 
-              style={{ ...styles.sidebarLinkClickable, justifyContent: isSidebarOpen ? "space-between" : "center" }}
-              onClick={() => isSidebarOpen ? setProjectsOpen(!projectsOpen) : setIsSidebarOpen(true)}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", justifyContent: isSidebarOpen ? "flex-start" : "center" }}>
-                <Folder size={16} style={{ color: "var(--text-muted)", minWidth: "16px" }} />
-                {isSidebarOpen && <span style={{ whiteSpace: "nowrap" }}>Projects</span>}
-              </div>
-              {isSidebarOpen && (projectsOpen ? <ChevronDown size={14} style={{ color: "var(--text-muted)" }}/> : <ChevronRight size={14} style={{ color: "var(--text-muted)" }}/>)}
-            </div>
-
-            <AnimatePresence>
-              {projectsOpen && isSidebarOpen && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  style={styles.projectList}
-                >
-                  <div style={styles.projectItem}>
-                    <span style={{...styles.projectIndicatorActive, minWidth: "4px"}} />
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{activeWorld?.name || "Untitled Project"}</span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          
-          <div style={{ ...styles.sidebarLink, justifyContent: isSidebarOpen ? "flex-start" : "center" }}>
-            <Layers size={16} style={{ color: "var(--text-muted)", minWidth: "16px" }} />
-            {isSidebarOpen && <span style={{ whiteSpace: "nowrap" }}>Archive</span>}
-          </div>
-        </div>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Settings Trigger */}
-        <motion.div 
-          whileHover="hover"
-          variants={{
-            hover: {
-              scale: 1.02,
-              boxShadow: "0 0 15px rgba(255, 255, 255, 0.05)",
-              borderColor: "rgba(255, 255, 255, 0.15)"
-            }
-          }}
-          whileTap={{ scale: 0.98 }}
-          style={{
-            ...styles.antiGravityCard, 
-            justifyContent: isSidebarOpen ? "flex-start" : "center", 
-            margin: isSidebarOpen ? "0 24px" : "0 12px", 
-            padding: isSidebarOpen ? "12px 16px" : "12px",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            background: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
-            position: "relative",
-            overflow: "hidden",
-            color: "#fff"
-          }}
-          onClick={() => router.push("/dashboard/settings")}
-        >
-          <motion.div
-            variants={{
-              hover: { rotate: 90 }
-            }}
-            transition={{ type: "spring", stiffness: 200 }}
-            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <Settings size={18} style={{ color: "var(--text-muted)", minWidth: "18px" }} />
-          </motion.div>
-          {isSidebarOpen && <span style={{ whiteSpace: "nowrap", fontWeight: 600, letterSpacing: "0.05em", color: "#fff" }}>Settings</span>}
-        </motion.div>
-
-        {/* User Profile - Lowermost below Settings */}
-        <div style={{
-          margin: isSidebarOpen ? "16px 24px 0 24px" : "16px 12px 0 12px",
-          background: isSidebarOpen ? "rgba(255, 255, 255, 0.02)" : "transparent",
-          border: isSidebarOpen ? "1px solid rgba(255, 255, 255, 0.05)" : "none",
-          borderRadius: "8px",
-          padding: isSidebarOpen ? "12px" : "8px 0",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          justifyContent: isSidebarOpen ? "flex-start" : "center",
-          transition: "background 0.2s"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0, justifyContent: isSidebarOpen ? "flex-start" : "center", width: "100%" }}>
-            <div style={{
-              ...styles.avatar,
-              boxShadow: "0 0 10px rgba(176,38,255,0.15)",
-              flexShrink: 0
-            }}>K</div>
-            {isSidebarOpen && (
-              <div style={{ ...styles.profileInfo, minWidth: 0 }}>
-                <div style={{ ...styles.profileName, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>KAITO-X</div>
-                <div style={{ ...styles.profileStatus, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>kaito.x@loreloom.ai</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
+      {/* LEFT SIDEBAR WITH SECTION DIVIDERS */}
+      <SidebarSectionDividersDemo />
 
       {/* RIGHT MAIN AREA - HOME DASHBOARD */}
       <div style={styles.mainArea}>
@@ -630,11 +500,10 @@ export default function DashboardPage() {
 const styles: Record<string, React.CSSProperties> = {
   dashboardContainer: {
     display: "flex",
-    height: "calc(100vh - 36px)",
+    height: "100vh",
     width: "100%",
     position: "relative",
     overflow: "hidden",
-    marginTop: "-36px",
   },
   sidebar: {
     width: "240px",
@@ -789,6 +658,8 @@ const styles: Record<string, React.CSSProperties> = {
     position: "relative",
     zIndex: 10,
     background: "rgba(5, 5, 5, 0.8)",
+    overflowY: "auto",
+    height: "100vh",
   },
   mainTopNav: {
     display: "flex",

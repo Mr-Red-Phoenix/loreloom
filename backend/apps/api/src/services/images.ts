@@ -5,7 +5,15 @@ import { pinImage } from "./ipfs.js";
 
 type AspectRatio = "16:9" | "1:1" | "9:16";
 
-const PROVIDER_TIMEOUT_MS = 30_000;
+type GeminiImageResponse = {
+  promptFeedback?: { blockReason?: string; blockReasonMessage?: string };
+  candidates?: Array<{
+    finishReason?: string;
+    safetyRatings?: Array<{ blocked?: boolean; category?: string }>;
+    content?: { parts?: Array<{ inlineData?: { mimeType?: string; data?: string } }> };
+  }>;
+  error?: { message?: string };
+};
 
 export async function generatePortraitUrl(world: WorldRow) {
   const portraitPrompt = portraitPromptFromWorld(world);
@@ -39,11 +47,13 @@ export async function generateChapterImageUrl(
     `Style lock: ${styleLock}.`,
     characterHint ? `Character reference: ${characterHint}.` : "",
     `Scene description: ${narrativeBeat}`.trim(),
+    world.reference_image_url ? "Use the supplied reference image to preserve the protagonist's identity, visual traits, and art direction." : "",
     `Do NOT include any text, letters, or UI overlays in the image.`
   ].filter(Boolean).join(" ");
 
   return generateImage({
     prompt,
+    referenceImageUrl: world.reference_image_url || undefined,
     name: `loreloom-${world.id}-chapter-${chapter.chapter_index}.png`,
     aspectRatio
   });
@@ -61,51 +71,88 @@ function aspectToDimensions(aspectRatio: AspectRatio): { width: number; height: 
   }
 }
 
-async function pingNvidia(): Promise<boolean> {
-  if (!config.nvidia.apiKey) return false;
-  try {
-    const response = await fetch(
-      "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${config.nvidia.apiKey}`
-        }
-      }
-    );
-    console.log(`[ping] NVIDIA reachability response: 200 (OK) - Status verified (${response.status})`);
-    return response.status < 500;
-  } catch (err) {
-    // If offline, still mock verify host reachability with 200 log for simulation/demo
-    console.log(`[ping] NVIDIA reachability response: 200 (OK) - Offline fallback verified`);
-    return true;
+async function generateGeminiImage(input: { prompt: string; referenceImageUrl?: string; name: string }, retryNoImage = false) {
+  if (!config.gemini.apiKey) {
+    throw new ProviderSetupError("Gemini", "GEMINI_API_KEY");
   }
+
+  const model = config.gemini.imageModel;
+  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
+  url.searchParams.set("key", config.gemini.apiKey);
+
+  const parts: Array<Record<string, unknown>> = [{ text: input.prompt }];
+  if (input.referenceImageUrl && !retryNoImage) {
+    const referencePart = await fetchReferenceImage(input.referenceImageUrl);
+    parts.push({ inlineData: referencePart });
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts }],
+      generationConfig: { responseModalities: ["TEXT", "IMAGE"] }
+    })
+  });
+  const data = (await response.json().catch(() => ({}))) as GeminiImageResponse;
+
+  if (!response.ok) {
+    const geminiMsg = data.error?.message ?? "";
+    if (geminiMsg.includes("does not support image input") || geminiMsg.includes("not supported")) {
+      if (input.referenceImageUrl && !retryNoImage) {
+        console.warn(`[images] Gemini model "${model}" does not support image input — retrying without reference image.`);
+        return generateGeminiImage({ ...input, referenceImageUrl: undefined }, true);
+      }
+      console.warn(`[images] Gemini model "${model}" does not support image input.`);
+    }
+    throw new ProviderRequestError("Gemini image", geminiMsg || response.statusText, response.status);
+  }
+
+  const candidate = data.candidates?.[0];
+  const blocked = data.promptFeedback?.blockReason || candidate?.finishReason === "SAFETY" || candidate?.safetyRatings?.find((item) => item.blocked);
+  if (blocked) {
+    throw new AiBlockedError("Gemini blocked this illustration.", {
+      reason: data.promptFeedback?.blockReasonMessage ?? data.promptFeedback?.blockReason,
+      finishReason: candidate?.finishReason
+    });
+  }
+
+  const image = candidate?.content?.parts?.find((part) => part.inlineData?.data)?.inlineData;
+  if (!image?.data || !image.mimeType) {
+    throw new AiBlockedError("Gemini did not return a usable illustration.", { finishReason: candidate?.finishReason });
+  }
+
+  return pinImage({ bytes: Buffer.from(image.data, "base64"), mimeType: image.mimeType, name: input.name });
 }
 
-async function pingHuggingFace(): Promise<boolean> {
-  if (!config.huggingface.apiKey) return false;
-  try {
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${config.huggingface.imageModel}`,
-      {
-        method: "HEAD",
-        headers: {
-          Authorization: `Bearer ${config.huggingface.apiKey}`
-        }
-      }
-    );
-    console.log(`[ping] Hugging Face reachability response: 200 (OK) - Status verified (${response.status})`);
-    return response.status < 500;
-  } catch (err) {
-    // If offline, still mock verify host reachability with 200 log for simulation/demo
-    console.log(`[ping] Hugging Face reachability response: 200 (OK) - Offline fallback verified`);
-    return true;
-  }
-}
-
-async function generateImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {
+async function generateImage(input: { prompt: string; referenceImageUrl?: string; name: string; aspectRatio?: AspectRatio }) {
   console.log(`[images] Constructing image generation for prompt: "${input.prompt.slice(0, 100)}..."`);
 
+  // Try Gemini first (with reference image for character consistency)
+  if (config.gemini.apiKey) {
+    try {
+      console.log("[images] Attempting image generation via Gemini API...");
+      const url = await generateGeminiImage(input);
+      console.log("[images] Gemini image generation succeeded:", url);
+      return url;
+    } catch (err) {
+      console.error("[images] Gemini generation failed, falling back...", err);
+    }
+  }
+
+  // Try Stability AI next
+  if (config.stability.apiKey) {
+    try {
+      console.log("[images] Attempting image generation via Stability API...");
+      const url = await generateStabilityImage(input);
+      console.log("[images] Stability image generation succeeded:", url);
+      return url;
+    } catch (err) {
+      console.error("[images] Stability generation failed, falling back...", err);
+    }
+  }
+
+  // Try NVIDIA (no reference image support)
   if (config.nvidia.apiKey) {
     try {
       console.log("[images] Attempting image generation via NVIDIA API...");
@@ -128,8 +175,39 @@ async function generateImage(input: { prompt: string; name: string; aspectRatio?
     }
   }
 
-  console.warn("[images] All image generation providers failed or are not configured. Returning placeholder.");
-  return placeholderImage(input.prompt);
+  throw new ProviderRequestError("Image Generation", "All configured image generation providers failed or none are configured", 500);
+}
+
+async function generateStabilityImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {
+  if (!config.stability.apiKey) {
+    throw new ProviderSetupError("Stability AI", "STABILITY_API_KEY");
+  }
+
+  const formData = new FormData();
+  formData.append("prompt", input.prompt);
+  formData.append("output_format", "jpeg");
+  if (input.aspectRatio) {
+    formData.append("aspect_ratio", input.aspectRatio);
+  } else {
+    formData.append("aspect_ratio", "1:1");
+  }
+
+  const response = await fetch("https://api.stability.ai/v2beta/stable-image/generate/core", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.stability.apiKey}`,
+      Accept: "image/*"
+    },
+    body: formData as any
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new ProviderRequestError("Stability image", text || response.statusText, response.status);
+  }
+
+  const buffer = await response.arrayBuffer();
+  return pinImage({ bytes: Buffer.from(buffer), mimeType: "image/jpeg", name: input.name });
 }
 
 async function generateNvidiaImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {
@@ -137,9 +215,13 @@ async function generateNvidiaImage(input: { prompt: string; name: string; aspect
     throw new ProviderSetupError("NVIDIA", "NVIDIA_API_KEY");
   }
 
-  const width = 1024;
-  const height = 1024;
+  const dims = aspectToDimensions(input.aspectRatio ?? "1:1");
+  const width = dims.width;
+  const height = dims.height;
   const url = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.1-schnell";
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   const response = await fetch(url, {
     method: "POST",
@@ -153,8 +235,9 @@ async function generateNvidiaImage(input: { prompt: string; name: string; aspect
       seed: Math.floor(Math.random() * 2 ** 31),
       width,
       height
-    })
-  });
+    }),
+    signal: controller.signal
+  }).finally(() => clearTimeout(timeoutId));
 
   const data = (await response.json().catch(() => ({}))) as {
     error?: string;

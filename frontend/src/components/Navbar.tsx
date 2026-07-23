@@ -8,16 +8,16 @@ import { Settings } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/workspace")) return null;
   const isWorkspace = pathname?.startsWith("/workspace") || pathname?.startsWith("/dashboard");
+  if (isWorkspace) return null;
   const isLandingPage = pathname === "/";
-  const isTransparentNav = isWorkspace || isLandingPage;
+  const isTransparentNav = isLandingPage;
 
   return (
     <motion.header
       style={{
         ...styles.header,
-        position: isWorkspace ? "absolute" : "fixed",
+        position: "fixed",
         backgroundColor: isTransparentNav ? "transparent" : "rgba(5, 5, 5, 0.8)",
         borderBottom: isTransparentNav ? "none" : "1px solid rgba(255,255,255,0.05)",
         backdropFilter: isTransparentNav ? "none" : "blur(20px)",
@@ -38,19 +38,17 @@ export function Navbar() {
 
         {/* Right: CTA */}
         <div style={styles.right}>
-          {!isWorkspace && (
-            <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={styles.ctaButton}
-              >
-                <div style={styles.ctaButtonInner}>
-                  Dashboard
-                </div>
-              </motion.button>
-            </Link>
-          )}
+          <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={styles.ctaButton}
+            >
+              <div style={styles.ctaButtonInner}>
+                Go to Dashboard
+              </div>
+            </motion.button>
+          </Link>
         </div>
       </div>
     </motion.header>
@@ -122,6 +120,18 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flex: 1,
     justifyContent: "flex-end",
+  },
+  loginButton: {
+    background: "transparent",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "100px",
+    padding: "8px 20px",
+    color: "var(--text-secondary)",
+    fontFamily: "var(--font-sans)",
+    fontSize: "0.85rem",
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "border-color 0.2s, color 0.2s",
   },
   ctaButton: {
     background: "linear-gradient(135deg, var(--accent-purple), var(--accent-cyan))",

@@ -87,53 +87,7 @@ export default function SettingsPage() {
         {/* Settings Form Layout */}
         <div style={styles.settingsGrid}>
           
-          {/* Left Column: API Keys & Credentials */}
-          <div className="glass-panel" style={styles.panel}>
-            <div style={styles.panelHeader}>
-              <Key size={18} color="var(--accent-purple)" />
-              <h2 style={styles.panelTitle}>API Credentials</h2>
-            </div>
-            <p style={styles.panelDesc}>Configure keys to unlock live model generation. Keys are stored locally on your device.</p>
-            
-            <div style={styles.formGroup}>
-              <div style={styles.labelRow}>
-                <label style={styles.label}>OpenAI API Key</label>
-                <button 
-                  onClick={() => setShowKeys(!showKeys)} 
-                  style={styles.toggleVisibilityBtn}
-                >
-                  {showKeys ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
-              <input
-                type={showKeys ? "text" : "password"}
-                className="form-input"
-                placeholder="sk-or-your-custom-openai-key..."
-                value={openaiKey}
-                onChange={(e) => setOpenaiKey(e.target.value)}
-                style={styles.input}
-              />
-            </div>
 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Google Gemini API Key</label>
-              <input
-                type={showKeys ? "text" : "password"}
-                className="form-input"
-                placeholder="AIzaSy-or-your-gemini-key..."
-                value={geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)}
-                style={styles.input}
-              />
-            </div>
-
-            <div style={styles.infoBox}>
-              <ShieldCheck size={16} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                Zero-knowledge cache: Keys remain sandboxed inside your local browser memory space.
-              </span>
-            </div>
-          </div>
 
           {/* Right Column: Visual Aesthetics & Performance */}
           <div className="glass-panel" style={styles.panel}>
@@ -236,21 +190,25 @@ export default function SettingsPage() {
 
 const styles: Record<string, React.CSSProperties> = {
   pageContainer: {
-    padding: "80px 48px 48px 48px",
+    padding: "32px 48px",
     minHeight: "100vh",
     background: "#050505",
     color: "#fff",
     position: "relative",
     overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
   },
   contentWrapper: {
-    maxWidth: "1000px",
+    maxWidth: "850px",
+    width: "100%",
     margin: "0 auto",
     zIndex: 10,
     position: "relative",
     display: "flex",
     flexDirection: "column",
-    gap: "32px",
+    gap: "20px",
   },
   header: {
     display: "flex",
@@ -289,7 +247,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   settingsGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "1fr",
     gap: "24px",
   },
   panel: {

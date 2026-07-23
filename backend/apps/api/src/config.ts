@@ -46,9 +46,9 @@ export const config = {
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
-    model: process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite",
-    imageModel: process.env.GEMINI_IMAGE_MODEL ?? process.env.GEMINI_IMAGE_FAST_MODEL ?? "gemini-3.1-flash-lite-image",
-    imageProModel: process.env.GEMINI_IMAGE_PRO_MODEL ?? "gemini-3-pro-image"
+    model: process.env.GEMINI_MODEL ?? "gemini-2.0-flash-lite-001",
+    imageModel: process.env.GEMINI_IMAGE_MODEL ?? process.env.GEMINI_IMAGE_FAST_MODEL ?? "gemini-2.0-flash-exp-image-generation",
+    imageProModel: process.env.GEMINI_IMAGE_PRO_MODEL ?? "imagen-3.0-generate-001"
   },
   nvidia: {
     apiKey: process.env.NVIDIA_API_KEY,
@@ -58,6 +58,9 @@ export const config = {
     apiKey: process.env.HUGGINGFACE_API_KEY ?? process.env.HF_TOKEN,
     imageModel: process.env.HUGGINGFACE_IMAGE_MODEL ?? "black-forest-labs/FLUX.1-schnell"
   },
+  stability: {
+    apiKey: process.env.STABILITY_API_KEY
+  },
   ipfs: {
     mode: process.env.IPFS_MODE ?? "mock",
     pinataJwt: process.env.PINATA_JWT
@@ -66,6 +69,8 @@ export const config = {
     mode: process.env.MINT_MODE ?? "mock",
     thirdwebClientId: process.env.THIRDWEB_CLIENT_ID,
     thirdwebSecretKey: process.env.THIRDWEB_SECRET_KEY,
+    thirdwebVaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN,
+    thirdwebTransactionsUrl: process.env.THIRDWEB_TRANSACTIONS_URL ?? "https://engine.thirdweb.com",
     thirdwebEngineUrl: process.env.THIRDWEB_ENGINE_URL,
     thirdwebEngineAccessToken: process.env.THIRDWEB_ENGINE_ACCESS_TOKEN,
     thirdwebBackendWalletAddress: process.env.THIRDWEB_BACKEND_WALLET_ADDRESS,

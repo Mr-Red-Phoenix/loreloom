@@ -82,10 +82,14 @@ export function VisualCanonGraphic({
   }
 
   if (seed && (seed.startsWith("http") || seed.startsWith("/") || seed.includes("/"))) {
+    const imgSrc = seed.startsWith("ipfs://") 
+      ? `https://gateway.pinata.cloud/ipfs/${seed.slice(7)}` 
+      : seed;
+      
     return (
       <div data-testid="vcg-image" style={{ width: "100%", height: "100%", position: "relative" }}>
         <img
-          src={seed}
+          src={imgSrc}
           alt="Visual Synthesis Render"
           style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px", display: "block" }}
         />

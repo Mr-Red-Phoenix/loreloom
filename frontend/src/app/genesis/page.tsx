@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStory } from "../../context/StoryContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Cpu, Sparkles, Code, Database, Hexagon, ImagePlus, Palette, Dna, Folder, FileText, ChevronRight, X, Globe, ArrowUp, Plus, ChevronDown, Sun } from "lucide-react";
+import { User, Cpu, Sparkles, Code, Database, Hexagon, Palette, Dna, Folder, FileText, ChevronRight, X, Globe, ArrowUp, ChevronDown, Sun } from "lucide-react";
 
 interface AiOutput {
   characterDetails: {
@@ -177,8 +177,6 @@ export default function GenesisPage() {
   const [refinePrompt, setRefinePrompt] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [chatHistory, setChatHistory] = useState<{ role: "user" | "model"; content: string }[]>([]);
-  const [attachedImage, setAttachedImage] = useState<string | null>(null);
-  const promptFileInputRef = useRef<HTMLInputElement>(null);
   const [isPromptFocused, setIsPromptFocused] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
 
@@ -191,17 +189,6 @@ export default function GenesisPage() {
         return [...prev, node];
       }
     });
-  };
-
-  const handlePromptImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAttachedImage(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const executeRefinement = async () => {
@@ -285,7 +272,6 @@ export default function GenesisPage() {
       setChatHistory(prev => [...prev, { role: "model", content: `Refinement complete. Canon details updated and synchronized.` }]);
       setRefinePrompt("");
       setSelectedNodes([]);
-      setAttachedImage(null);
     } catch (err: any) {
       console.error("Refinement error:", err);
       // Fallback to local mock if AI endpoint fails
@@ -474,15 +460,7 @@ export default function GenesisPage() {
     );
   };
   
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const url = URL.createObjectURL(e.target.files[0]);
-      setUploadedImage(url);
-    }
-  };
 
   const updateData = (key: string, value: string) => {
     setGenesisData((prev) => ({ ...prev, [key]: value }));
@@ -854,21 +832,11 @@ export default function GenesisPage() {
                     }}
                     autoFocus
                   />
-                  {uploadedImage && (
-                    <div style={{ position: "absolute", bottom: "16px", left: "16px", display: "flex", alignItems: "center", gap: "8px", background: "rgba(0,0,0,0.8)", padding: "4px 8px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      <img src={uploadedImage} alt="Context" style={{ width: "24px", height: "24px", borderRadius: "4px", objectFit: "cover" }} />
-                      <span style={{ fontSize: "0.8rem", color: "#ccc" }}>Context Attached</span>
-                      <button onClick={() => setUploadedImage(null)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: "0 4px" }}>×</button>
+                  <div style={{ position: "absolute", bottom: "16px", left: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", lineHeight: 1.4 }}>
+                      Image input not supported by the current AI model. Use text only.
                     </div>
-                  )}
-                  <button 
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{ position: "absolute", bottom: "16px", right: "16px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "8px 12px", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.2s ease" }}
-                  >
-                    <ImagePlus size={16} />
-                    <span style={{ fontSize: "0.9rem" }}>Add Context Image</span>
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: "none" }} />
+                  </div>
                 </div>
               </div>
 
@@ -1107,63 +1075,9 @@ export default function GenesisPage() {
                           }}>
                             {/* Left Controls */}
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-                              <button 
-                                onClick={() => promptFileInputRef.current?.click()}
-                                disabled={attachedImage !== null}
-                                style={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "6px",
-                                  background: "rgba(255, 255, 255, 0.06)",
-                                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                                  color: "#ffffff",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  cursor: "pointer",
-                                  flexShrink: 0,
-                                  transition: "background 0.2s"
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)"}
-                                onMouseOut={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)"}
-                                title="Add image (max 1)"
-                              >
-                                <Plus size={14} />
-                              </button>
-                              
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                style={{ display: "none" }} 
-                                ref={promptFileInputRef} 
-                                onChange={handlePromptImageUpload} 
-                              />
-
-                              {attachedImage && (
-                                <div style={{ position: "relative", width: "28px", height: "28px", borderRadius: "6px", overflow: "hidden", border: "1px solid rgba(255, 255, 255, 0.15)", flexShrink: 0 }}>
-                                  <img src={attachedImage} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                  <button 
-                                    onClick={() => setAttachedImage(null)}
-                                    style={{
-                                      position: "absolute",
-                                      top: 0, right: 0,
-                                      background: "rgba(0,0,0,0.7)",
-                                      color: "#fff",
-                                      border: "none",
-                                      borderRadius: "50%",
-                                      width: "12px",
-                                      height: "12px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      cursor: "pointer",
-                                      padding: 0
-                                    }}
-                                  >
-                                    <X size={8} />
-                                  </button>
-                                </div>
-                              )}
+                              <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", padding: "2px 6px", lineHeight: 1.3, flexShrink: 0 }}>
+                                Image input not supported
+                              </div>
 
                               {selectedNodes.map((node) => (
                                 <div 

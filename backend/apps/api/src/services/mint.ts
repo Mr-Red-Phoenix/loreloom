@@ -58,8 +58,8 @@ async function ensureMintTransaction(input: {
   if (config.mint.mode === "mock") {
     return recordMockMint(input);
   }
-  if (config.mint.mode !== "thirdweb-engine") {
-    throw new Error(`Unsupported MINT_MODE=${config.mint.mode}. Use mock or thirdweb-engine.`);
+  if (config.mint.mode !== "thirdweb-engine" && config.mint.mode !== "thirdweb-transactions") {
+    throw new Error(`Unsupported MINT_MODE=${config.mint.mode}. Use mock, thirdweb-engine, or thirdweb-transactions.`);
   }
 
   const existingQueueId = existing?.tx_hash?.startsWith("engine:") ? existing.tx_hash.slice("engine:".length) : undefined;

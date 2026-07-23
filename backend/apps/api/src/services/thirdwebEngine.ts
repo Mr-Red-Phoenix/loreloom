@@ -17,6 +17,20 @@ type EnginePayload = {
   error?: string | { message?: string };
 };
 
+type EngineConfig =
+  | {
+      mode: "v2";
+      url: string;
+      walletAddress: string;
+      headers: Record<string, string>;
+    }
+  | {
+      mode: "v3";
+      url: string;
+      walletAddress: string;
+      headers: Record<string, string>;
+    };
+
 export async function submitContractWrite(input: {
   contractAddress: string;
   functionName: string;
@@ -24,6 +38,10 @@ export async function submitContractWrite(input: {
   idempotencyKey: string;
 }): Promise<EngineWriteResult> {
   const engine = getEngineConfig();
+  if (engine.mode === "v3") {
+    return submitTransactionsWrite(engine, input);
+  }
+
   const response = await fetch(
     `${engine.url}/contract/${config.mint.chainId}/${input.contractAddress}/write?simulateTx=true`,
     {
@@ -49,6 +67,10 @@ export async function submitContractWrite(input: {
 
 export async function getEngineTransaction(queueId: string): Promise<EngineTransaction> {
   const engine = getEngineConfig();
+  if (engine.mode === "v3") {
+    return getTransactionsStatus(engine, queueId);
+  }
+
   const response = await fetch(`${engine.url}/transaction/status/${encodeURIComponent(queueId)}`, {
     headers: engine.headers
   });
@@ -64,15 +86,39 @@ export async function getEngineTransaction(queueId: string): Promise<EngineTrans
 export function normalizeEngineTransaction(value: unknown): EngineTransaction {
   const raw = unwrapObject(value);
   const statusValue = typeof raw.status === "string" ? raw.status.toLowerCase() : "unknown";
-  const status: EngineTransactionStatus = ["queued", "sent", "mined", "errored", "cancelled"].includes(statusValue)
-    ? (statusValue as EngineTransactionStatus)
-    : "unknown";
+  const status = normalizeStatus(statusValue);
   const transactionHash = firstString(raw.transactionHash, raw.transaction_hash, raw.txHash, raw.tx_hash);
   const errorMessage = firstString(raw.errorMessage, raw.error_message, raw.error);
   return { status, transactionHash, errorMessage };
 }
 
-function getEngineConfig() {
+function getEngineConfig(): EngineConfig {
+  const transactionsSecretKey = config.mint.thirdwebSecretKey;
+  const vaultAccessToken = config.mint.thirdwebVaultAccessToken;
+  const transactionsWalletAddress = config.mint.thirdwebBackendWalletAddress ?? config.mint.deployerAddress;
+
+  if (config.mint.mode === "thirdweb-transactions") {
+    if (!transactionsSecretKey || !transactionsWalletAddress) {
+      throw new Error(
+        "thirdweb Transactions is not configured. Set THIRDWEB_SECRET_KEY and THIRDWEB_BACKEND_WALLET_ADDRESS."
+      );
+    }
+
+    const headers: Record<string, string> = {
+      "x-secret-key": transactionsSecretKey
+    };
+    if (vaultAccessToken) {
+      headers["x-vault-access-token"] = vaultAccessToken;
+    }
+
+    return {
+      mode: "v3",
+      url: config.mint.thirdwebTransactionsUrl.replace(/\/$/, ""),
+      walletAddress: transactionsWalletAddress,
+      headers
+    };
+  }
+
   const url = config.mint.thirdwebEngineUrl?.replace(/\/$/, "");
   const accessToken = config.mint.thirdwebEngineAccessToken;
   const walletAddress = config.mint.thirdwebBackendWalletAddress;
@@ -83,16 +129,130 @@ function getEngineConfig() {
   }
 
   return {
+    mode: "v2",
     url,
     walletAddress,
     headers: { authorization: `Bearer ${accessToken}` }
   };
 }
 
+async function submitTransactionsWrite(
+  engine: Extract<EngineConfig, { mode: "v3" }>,
+  input: Parameters<typeof submitContractWrite>[0]
+): Promise<EngineWriteResult> {
+  const response = await fetch(`${engine.url}/v1/write/contract`, {
+    method: "POST",
+    headers: {
+      ...engine.headers,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      executionOptions: {
+        type: "EOA",
+        chainId: config.mint.chainId,
+        from: engine.walletAddress,
+        idempotencyKey: input.idempotencyKey
+      },
+      params: [
+        {
+          contractAddress: input.contractAddress,
+          method: methodSignature(input.functionName),
+          params: input.args
+        }
+      ]
+    })
+  });
+  const payload = (await readJson(response)) as EnginePayload;
+  const queueId = extractTransactionsQueueId(payload.result);
+
+  if (!response.ok || !queueId) {
+    throw new Error(`thirdweb Transactions write failed (${response.status}): ${engineError(payload)}`);
+  }
+
+  return { queueId };
+}
+
+async function getTransactionsStatus(
+  engine: Extract<EngineConfig, { mode: "v3" }>,
+  queueId: string
+): Promise<EngineTransaction> {
+  const response = await fetch(`${engine.url}/v1/transactions/search`, {
+    method: "POST",
+    headers: {
+      ...engine.headers,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      page: 1,
+      limit: 1,
+      filters: [
+        {
+          field: "id",
+          values: [queueId],
+          operation: "OR"
+        }
+      ],
+      sortBy: "createdAt",
+      sortDirection: "desc"
+    })
+  });
+  const payload = (await readJson(response)) as EnginePayload;
+
+  if (!response.ok) {
+    throw new Error(`thirdweb Transactions status failed (${response.status}): ${engineError(payload)}`);
+  }
+
+  const transactions = unwrapObject(payload.result).transactions;
+  const transaction = Array.isArray(transactions) ? transactions[0] : undefined;
+  return transaction ? normalizeEngineTransaction(transaction) : { status: "unknown" };
+}
+
 function extractQueueId(result: unknown) {
   if (typeof result === "string") return result;
   const raw = unwrapObject(result);
   return firstString(raw.queueId, raw.queue_id, raw.id);
+}
+
+function extractTransactionsQueueId(result: unknown) {
+  const raw = unwrapObject(result);
+  const transactions = raw.transactions;
+  if (Array.isArray(transactions)) {
+    const first = unwrapObject(transactions[0]);
+    return firstString(first.id, first.queueId, first.queue_id);
+  }
+  return extractQueueId(result);
+}
+
+function normalizeStatus(statusValue: string): EngineTransactionStatus {
+  switch (statusValue) {
+    case "queued":
+      return "queued";
+    case "sent":
+    case "submitted":
+      return "sent";
+    case "mined":
+    case "confirmed":
+      return "mined";
+    case "errored":
+    case "failed":
+      return "errored";
+    case "cancelled":
+    case "canceled":
+      return "cancelled";
+    default:
+      return "unknown";
+  }
+}
+
+function methodSignature(functionName: string) {
+  switch (functionName) {
+    case "mint":
+      return "mint(address,string)";
+    case "mintChapter":
+      return "mintChapter(address,uint256,string)";
+    default:
+      return functionName;
+  }
 }
 
 function unwrapObject(value: unknown): Record<string, unknown> {

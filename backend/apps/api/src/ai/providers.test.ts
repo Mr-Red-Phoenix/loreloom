@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { generateStructured } from "./providers.js";
 
-test("uses NVIDIA once when Gemini has a transient provider failure", async () => {
+test("uses OpenRouter once when Gemini has a transient provider failure", async () => {
   const originalFetch = globalThis.fetch;
   const calls: string[] = [];
   globalThis.fetch = (async (input) => {
@@ -47,7 +47,7 @@ test("uses NVIDIA once when Gemini has a transient provider failure", async () =
       allowNvidiaFallback: true
     });
 
-    assert.equal(result.provider, "nvidia");
+    assert.equal(result.provider, "openrouter");
     assert.deepEqual(result.arguments, { value: "fallback" });
     assert.equal(calls.length, 2);
   } finally {
