@@ -29,7 +29,7 @@ module.exports = {
   },
   networks: {
     xlayerTestnet: {
-      url: process.env.X_LAYER_RPC_URL ?? "https://testrpc.xlayer.tech/terigon",
+      url: process.env.X_LAYER_RPC_URL ?? "https://xlayertestrpc.okx.com",
       chainId: 1952,
       accounts: deployerPrivateKey ? [deployerPrivateKey] : []
     }

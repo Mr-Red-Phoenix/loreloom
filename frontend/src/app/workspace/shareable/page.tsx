@@ -3,7 +3,8 @@
 import React, { useState, Suspense } from "react";
 import { useStory } from "../../../context/StoryContext";
 import { useWorldStore } from "../../../store/useWorldStore";
-import { Share2, BookOpen, ExternalLink, Link as LinkIcon, Check } from "lucide-react";
+import { Share2 as LucideShare2 } from "lucide-react";
+import { BookOpen01 as BookOpen, LinkExternal01 as ExternalLink, Link01 as LinkIcon, Check } from "@untitledui/icons";
 
 function ShareableContent() {
   const { activeWorld } = useStory();
@@ -34,7 +35,7 @@ function ShareableContent() {
       {/* Export Header */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
-          <Share2 size={22} color="var(--accent-purple)" />
+          <LucideShare2 size={24} style={{ color: "var(--accent-purple)", flexShrink: 0 }} />
           <h1 className="title-cyber" style={styles.title}>SHAREABLE CANON PREVIEW</h1>
         </div>
         
@@ -110,9 +111,11 @@ export default function ShareablePage() {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: "32px 40px",
-    minHeight: "100vh",
-    background: "#050505",
-    color: "#fff",
+    minHeight: "100%",
+    flex: 1,
+    width: "100%",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     position: "relative",
     display: "flex",
     flexDirection: "column",
@@ -124,13 +127,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#050505"
+    background: "hsl(var(--background))"
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "16px",
     zIndex: 10,
     gap: "20px"
@@ -143,7 +146,8 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: "1.3rem",
     fontWeight: 700,
-    margin: 0
+    margin: 0,
+    color: "hsl(var(--foreground))"
   },
   shareBtn: {
     border: "none",
@@ -165,15 +169,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
   previewPaper: {
     width: "100%",
-    maxWidth: "700px", // Constrained-width container sitting in middle
-    background: "rgba(10, 10, 12, 0.4)",
-    border: "1px solid rgba(255, 255, 255, 0.05)",
+    maxWidth: "760px", // Constrained-width container sitting in middle
+    background: "hsl(var(--background))",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "16px",
     padding: "40px",
     display: "flex",
     flexDirection: "column",
     gap: "24px",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.06)"
   },
   paperHeader: {
     display: "flex",
@@ -188,19 +193,19 @@ const styles: Record<string, React.CSSProperties> = {
   },
   divider: {
     height: "1px",
-    background: "rgba(255, 255, 255, 0.05)"
+    background: "hsl(var(--border))"
   },
   paperTitle: {
     fontSize: "1.8rem",
     fontWeight: 800,
     fontFamily: "var(--font-sans)",
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     margin: 0
   },
   paperPremise: {
     fontSize: "0.95rem",
     fontStyle: "italic",
-    color: "rgba(255,255,255,0.7)",
+    color: "var(--text-secondary)",
     margin: 0,
     lineHeight: 1.5
   },
@@ -208,8 +213,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr 1fr",
     gap: "16px",
-    background: "rgba(255,255,255,0.01)",
-    border: "1px solid rgba(255,255,255,0.02)",
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "10px",
     padding: "16px"
   },
@@ -227,7 +232,7 @@ const styles: Record<string, React.CSSProperties> = {
   metaVal: {
     fontSize: "0.85rem",
     fontWeight: 600,
-    color: "rgba(255,255,255,0.9)"
+    color: "hsl(var(--foreground))"
   },
   chaptersFlow: {
     display: "flex",
@@ -241,14 +246,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "12px"
   },
   chHeader: {
-    fontSize: "1.1rem",
+    fontSize: "1.15rem",
     fontWeight: 700,
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     margin: 0
   },
   chText: {
-    fontSize: "0.9rem",
-    color: "rgba(255,255,255,0.8)",
+    fontSize: "0.92rem",
+    color: "hsl(var(--foreground))",
     lineHeight: 1.8,
     margin: 0,
     textAlign: "justify"

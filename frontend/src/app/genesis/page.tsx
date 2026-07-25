@@ -4,7 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStory } from "../../context/StoryContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Cpu, Sparkles, Code, Database, Hexagon, Palette, Dna, Folder, FileText, ChevronRight, X, Globe, ArrowUp, ChevronDown, Sun } from "lucide-react";
+import {
+  User01 as User,
+  CpuChip01 as Cpu,
+  Stars01 as Sparkles,
+  Code01 as Code,
+  Database01 as Database,
+  Palette,
+  Atom01 as Dna,
+  Folder,
+  File01 as FileText,
+  ChevronRight,
+  XClose as X,
+  ArrowUp,
+} from "@untitledui/icons";
 
 interface AiOutput {
   characterDetails: {
@@ -335,8 +348,8 @@ export default function GenesisPage() {
     const isSelected = (path: string) => selectedNodes.some(n => n.path === path);
     const nodeStyle = (path: string) => ({
       ...styles.treeNode,
-      border: isSelected(path) ? `1px solid ${accent}` : "1px solid rgba(255,255,255,0.08)",
-      background: isSelected(path) ? `${accent}18` : "#09090b",
+      border: isSelected(path) ? `1px solid ${accent}` : "1px solid hsl(var(--border))",
+      background: isSelected(path) ? `${accent}18` : "var(--card-bg)",
       boxShadow: isSelected(path) ? `0 0 12px ${accent}20` : "none",
       cursor: "grab",
       userSelect: "none" as const
@@ -350,11 +363,11 @@ export default function GenesisPage() {
         
         {/* Style/Theme Info */}
         <div style={styles.treeBranch}>
-          <div style={{...styles.treeNode, cursor: "default", background: "#09090b", border: "1px solid rgba(255,255,255,0.08)"}}>
+          <div style={{...styles.treeNode, cursor: "default", background: "var(--card-bg)", border: "1px solid hsl(var(--border))"}}>
             <Palette size={14} color={accent} style={{ marginTop: "2px", flexShrink: 0 }} />
             <span style={{ lineHeight: "1.5", wordBreak: "break-word" }}><strong>Theme Style:</strong> {genesisData.style}</span>
           </div>
-          <div style={{...styles.treeNode, cursor: "default", background: "#09090b", border: "1px solid rgba(255,255,255,0.08)"}}>
+          <div style={{...styles.treeNode, cursor: "default", background: "var(--card-bg)", border: "1px solid hsl(var(--border))"}}>
             <Dna size={14} style={{ marginTop: "2px", flexShrink: 0 }} />
             <span style={{ lineHeight: "1.5", wordBreak: "break-word" }}><strong>Entity Base:</strong> {SPECIES_OPTIONS.find(s => s.id === genesisData.species)?.label || genesisData.species}</span>
           </div>
@@ -362,7 +375,7 @@ export default function GenesisPage() {
 
         {/* 1. Character Details Branch */}
         <div style={{ marginTop: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#fff", fontSize: "0.95rem", fontWeight: 600, marginBottom: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "hsl(var(--foreground))", fontSize: "0.95rem", fontWeight: 600, marginBottom: "8px" }}>
             <ChevronRight size={14} style={{ transform: "rotate(90deg)" }} />
             <User size={14} />
             <span>1. Character Details</span>
@@ -740,13 +753,13 @@ export default function GenesisPage() {
                         background: `linear-gradient(0deg, rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url(${preset.bgImage})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
-                        border: `1px solid ${isSelected ? preset.accent : 'rgba(255,255,255,0.1)'}`,
+                        border: `1px solid ${isSelected ? preset.accent : 'hsl(var(--border))'}`,
                         boxShadow: isSelected ? `0 0 15px ${preset.accent}40` : "none",
                         transition: "all 0.3s ease",
                         flexShrink: 0
                       }} />
                       <div>
-                        <h3 style={{...styles.optionTitle, color: isSelected ? preset.accent : "#fff"}}>{preset.name}</h3>
+                        <h3 style={{...styles.optionTitle, color: isSelected ? preset.accent : "hsl(var(--foreground))"}}>{preset.name}</h3>
                         <p style={styles.optionDesc}>{preset.desc}</p>
                       </div>
                     </div>
@@ -800,7 +813,7 @@ export default function GenesisPage() {
                     opacity: 1,
                   }}
                 />
-                <div style={{ position: "relative", zIndex: 1, background: "rgba(255, 255, 255, 0.02)", backdropFilter: "blur(24px)", borderRadius: "15px", width: "100%", flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ position: "relative", zIndex: 1, background: "var(--card-bg)", border: "1px solid hsl(var(--border))", backdropFilter: "blur(24px)", borderRadius: "15px", width: "100%", flex: 1, display: "flex", flexDirection: "column" }}>
                   <textarea
                     style={{
                       ...styles.promptTextarea,
@@ -815,7 +828,7 @@ export default function GenesisPage() {
                       boxShadow: "none",
                       outline: "none",
                       resize: "none",
-                      color: "#fff",
+                      color: "hsl(var(--foreground))",
                       display: "block",
                       width: "100%"
                     }}
@@ -833,7 +846,7 @@ export default function GenesisPage() {
                     autoFocus
                   />
                   <div style={{ position: "absolute", bottom: "16px", left: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.04)", padding: "6px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", lineHeight: 1.4 }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", background: "var(--card-bg)", padding: "6px 10px", borderRadius: "6px", border: "1px solid hsl(var(--border))", lineHeight: 1.4 }}>
                       Image input not supported by the current AI model. Use text only.
                     </div>
                   </div>
@@ -882,7 +895,7 @@ export default function GenesisPage() {
                   {!error && <div className="loader" />}
                 </div>
                 {!error && (
-                  <div style={{ fontSize: "0.65rem", fontFamily: "var(--font-mono)", color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em" }}>
+                  <div style={{ fontSize: "0.65rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", letterSpacing: "0.1em" }}>
                     {progress}%
                   </div>
                 )}
@@ -924,12 +937,12 @@ export default function GenesisPage() {
                         display: "flex", 
                         alignItems: "center", 
                         gap: "8px", 
-                        color: "#fff", 
+                        color: "hsl(var(--foreground))", 
                         fontWeight: 600, 
                         fontSize: "0.85rem",
                         textTransform: "uppercase", 
                         letterSpacing: "0.05em",
-                        borderBottom: "1px solid rgba(255,255,255,0.05)", 
+                        borderBottom: "1px solid hsl(var(--border))", 
                         paddingBottom: "12px", 
                         marginBottom: "12px" 
                       }}>
@@ -956,12 +969,12 @@ export default function GenesisPage() {
                         {chatHistory.map((chat, idx) => (
                           <div key={idx} style={{ 
                             alignSelf: chat.role === "user" ? "flex-end" : "flex-start", 
-                            background: chat.role === "user" ? "rgba(0, 214, 255, 0.12)" : "rgba(255, 255, 255, 0.05)", 
-                            border: chat.role === "user" ? "1px solid rgba(0, 214, 255, 0.2)" : "1px solid rgba(255, 255, 255, 0.1)",
+                            background: chat.role === "user" ? "rgba(0, 214, 255, 0.12)" : "var(--card-bg)", 
+                            border: chat.role === "user" ? "1px solid rgba(0, 214, 255, 0.2)" : "1px solid hsl(var(--border))",
                             borderRadius: "8px", 
                             padding: "10px 14px", 
                             maxWidth: "90%",
-                            color: chat.role === "user" ? "#00D6FF" : "#e2e8f0",
+                            color: chat.role === "user" ? "#00D6FF" : "hsl(var(--foreground))",
                             lineHeight: "1.5"
                           }}>
                             {chat.content}
@@ -1004,9 +1017,9 @@ export default function GenesisPage() {
                               ? "2px dashed var(--accent-cyan)"
                               : isPromptFocused 
                                 ? "1px solid rgba(176, 38, 255, 0.4)" 
-                                : "1px solid rgba(255, 255, 255, 0.08)",
+                                : "1px solid hsl(var(--border))",
                             borderRadius: "10px",
-                            background: isDraggingOver ? "rgba(0, 214, 255, 0.04)" : "#050505",
+                            background: isDraggingOver ? "rgba(0, 214, 255, 0.04)" : "var(--card-bg)",
                             padding: "16px",
                             boxShadow: isPromptFocused 
                               ? "0 12px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(176, 38, 255, 0.12)" 
@@ -1038,13 +1051,14 @@ export default function GenesisPage() {
                             </div>
                           )}
                           <textarea
+                            className="hide-scrollbar"
                             style={{
                               width: "100%",
                               minHeight: "48px",
                               border: "none",
                               outline: "none",
                               background: "transparent",
-                              color: "#ffffff",
+                              color: "hsl(var(--foreground))",
                               fontSize: "0.95rem",
                               fontFamily: "var(--font-inter)",
                               resize: "none",
@@ -1069,13 +1083,13 @@ export default function GenesisPage() {
                             display: "flex",
                             justifyContent: "space-between",
                             alignItems: "center",
-                            borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                            borderTop: "1px solid hsl(var(--border))",
                             paddingTop: "12px",
                             marginTop: "8px"
                           }}>
                             {/* Left Controls */}
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", padding: "2px 6px", lineHeight: 1.3, flexShrink: 0 }}>
+                              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", padding: "2px 6px", lineHeight: 1.3, flexShrink: 0 }}>
                                 Image input not supported
                               </div>
 
@@ -1083,9 +1097,9 @@ export default function GenesisPage() {
                                 <div 
                                   key={node.path}
                                   style={{
-                                    background: "rgba(255, 255, 255, 0.05)",
-                                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                                    color: "#ffffff",
+                                    background: "hsl(var(--background))",
+                                    border: "1px solid hsl(var(--border))",
+                                    color: "hsl(var(--foreground))",
                                     borderRadius: "6px",
                                     padding: "3px 8px",
                                     display: "flex",
@@ -1104,15 +1118,15 @@ export default function GenesisPage() {
                                     style={{
                                       background: "transparent",
                                       border: "none",
-                                      color: "rgba(255, 255, 255, 0.4)",
+                                      color: "var(--text-muted)",
                                       cursor: "pointer",
                                       padding: 0,
                                       display: "flex",
                                       alignItems: "center",
                                       transition: "color 0.2s"
                                     }}
-                                    onMouseOver={(e) => e.currentTarget.style.color = "#ffffff"}
-                                    onMouseOut={(e) => e.currentTarget.style.color = "rgba(255, 255, 255, 0.4)"}
+                                    onMouseOver={(e) => e.currentTarget.style.color = "hsl(var(--foreground))"}
+                                    onMouseOut={(e) => e.currentTarget.style.color = "var(--text-muted)"}
                                   >
                                     <X size={12} />
                                   </button>
@@ -1130,10 +1144,10 @@ export default function GenesisPage() {
                                   height: "32px",
                                   borderRadius: "6px",
                                   background: (isRefining || !refinePrompt.trim()) 
-                                    ? "rgba(255, 255, 255, 0.04)" 
+                                    ? "hsl(var(--background))" 
                                     : "linear-gradient(135deg, var(--accent-purple), var(--accent-cyan))",
-                                  color: (isRefining || !refinePrompt.trim()) ? "rgba(255, 255, 255, 0.2)" : "#ffffff",
-                                  border: "none",
+                                  color: (isRefining || !refinePrompt.trim()) ? "var(--text-muted)" : "#ffffff",
+                                  border: (isRefining || !refinePrompt.trim()) ? "1px solid hsl(var(--border))" : "none",
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -1176,34 +1190,29 @@ export default function GenesisPage() {
                 )}
               </div>
 
-              <div style={{...styles.navRow, position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 40px", borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(5,5,5,0.8)", backdropFilter: "blur(10px)", marginTop: 0, justifyContent: "space-between"}}>
+              <div style={{...styles.navRow, position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 40px", borderTop: "1px solid hsl(var(--border))", background: "var(--card-bg)", backdropFilter: "blur(10px)", marginTop: 0, justifyContent: "space-between"}}>
                 <button onClick={() => setStep(3)} style={{
                   ...styles.navBtn, 
                   padding: "10px 24px", 
                   fontSize: "0.95rem", 
-                  border: "1px solid rgba(255,255,255,0.2)", 
+                  border: "1px solid hsl(var(--border))", 
                   borderRadius: "4px"
                 }}>
                   Edit Genesis
                 </button>
                  <button 
                    onClick={confirmGenesis} 
-                   disabled={!isPortraitReady || isCommitting}
+                   disabled={isCommitting}
                    style={{
                      ...styles.navBtnPrimary, 
                      padding: "10px 24px", 
                      fontSize: "0.95rem", 
                      borderRadius: "4px",
-                     opacity: isPortraitReady ? 1 : 0.6,
-                     cursor: isPortraitReady ? "pointer" : "not-allowed"
+                     opacity: isCommitting ? 0.6 : 1,
+                     cursor: isCommitting ? "not-allowed" : "pointer"
                    }}
                  >
-                   {isPortraitReady ? (
-                     <>
-                       <Database size={16} style={{marginRight: "6px", verticalAlign: "middle"}} />
-                       Confirm Genesis
-                     </>
-                   ) : (
+                   {isCommitting ? (
                      <>
                        <span style={{ 
                          width: "12px", 
@@ -1216,7 +1225,12 @@ export default function GenesisPage() {
                          animation: "loader-rotate 1s linear infinite",
                          verticalAlign: "middle"
                        }} />
-                       Generating Portrait...
+                       Confirming...
+                     </>
+                   ) : (
+                     <>
+                       <Database size={16} style={{marginRight: "6px", verticalAlign: "middle"}} />
+                       Confirm Genesis
                      </>
                    )}
                  </button>
@@ -1243,13 +1257,13 @@ export default function GenesisPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 style={{
-                  background: "rgba(20, 20, 25, 0.95)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "var(--card-bg)",
+                  border: "1px solid hsl(var(--border))",
                   borderRadius: "16px",
                   padding: "32px",
                   maxWidth: "400px",
                   width: "100%",
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                   textAlign: "center"
                 }}
               >
@@ -1290,8 +1304,8 @@ export default function GenesisPage() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "calc(100vh - var(--nav-height))",
-    background: "#050505",
-    color: "#fff",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     position: "relative",
     overflow: "hidden",
     display: "flex",
@@ -1322,8 +1336,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   confirmationCard: {
     width: "100%",
-    background: "#09090b",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "12px",
     padding: "32px",
     paddingBottom: "100px",
@@ -1376,7 +1390,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: "20px",
-    background: "rgba(255,255,255,0.02)"
+    background: "var(--card-bg)"
   },
   presetThumb: {
     width: "48px",
@@ -1394,7 +1408,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "transparent",
     border: "none",
     borderBottom: "2px solid",
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     fontSize: "1.5rem",
     fontFamily: "var(--font-sans)",
     padding: "20px 0",
@@ -1419,22 +1433,26 @@ const styles: Record<string, React.CSSProperties> = {
     transition: "color 0.2s"
   },
   navBtnPrimary: {
-    background: "#fff",
-    color: "#000",
-    border: "none",
+    background: "hsl(var(--foreground))",
+    color: "hsl(var(--background))",
+    border: "1px solid hsl(var(--border))",
     padding: "12px 32px",
     borderRadius: "100px",
     fontSize: "1rem",
     fontWeight: 600,
     cursor: "pointer",
-    transition: "all 0.2s"
+    transition: "all 0.2s",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    whiteSpace: "nowrap"
   },
   splitHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: "16px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "12px"
   },
   toggleBtn: {
@@ -1492,7 +1510,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "24px"
   },
   preCode: {
-    background: "#0d0d12",
+    background: "var(--card-bg)",
     padding: "20px",
     borderRadius: "12px",
     fontFamily: "var(--font-mono)",
@@ -1516,7 +1534,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "stretch"
   },
   leftRefinePanel: {
-    background: "#0c0c0e",
+    background: "var(--card-bg)",
     border: "1px solid rgba(176, 38, 255, 0.22)",
     borderRadius: "8px",
     padding: "24px",
@@ -1530,7 +1548,7 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 4px 24px rgba(176, 38, 255, 0.03)"
   },
   rightTreePanel: {
-    background: "#0c0c0e",
+    background: "var(--card-bg)",
     border: "1px solid rgba(0, 214, 255, 0.22)",
     borderRadius: "8px",
     padding: "24px",
@@ -1548,7 +1566,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "10px",
     fontSize: "0.92rem",
     fontFamily: "var(--font-inter)",
-    color: "#e2e8f0",
+    color: "hsl(var(--foreground))",
     lineHeight: "1.5",
     transition: "all 0.2s ease"
   },
@@ -1566,9 +1584,9 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: "120px",
     padding: "12px",
     borderRadius: "8px",
-    background: "rgba(0,0,0,0.3)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    color: "#fff",
+    background: "transparent",
+    border: "none",
+    color: "hsl(var(--foreground))",
     fontSize: "0.9rem",
     outline: "none",
     resize: "none",

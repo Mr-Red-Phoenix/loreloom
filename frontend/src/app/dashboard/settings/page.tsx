@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, 
-  Save, 
+  Save01 as Save, 
   Eye, 
   EyeOff, 
-  Key, 
-  Cpu, 
-  Grid, 
-  ShieldCheck, 
-  Database,
-  Info
-} from "lucide-react";
+  Key01 as Key, 
+  CpuChip01 as Cpu, 
+  Grid01 as Grid, 
+  ShieldTick as ShieldCheck, 
+  Database01 as Database,
+  InfoCircle as Info
+} from "@untitledui/icons";
 
 export default function SettingsPage() {
   const router = useRouter();

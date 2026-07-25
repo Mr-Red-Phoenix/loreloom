@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Settings } from "lucide-react";
+import { Settings01 as Settings } from "@untitledui/icons";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -15,11 +15,12 @@ export function Navbar() {
 
   return (
     <motion.header
+      className={isLandingPage ? "dark text-white" : ""}
       style={{
         ...styles.header,
         position: "fixed",
-        backgroundColor: isTransparentNav ? "transparent" : "rgba(5, 5, 5, 0.8)",
-        borderBottom: isTransparentNav ? "none" : "1px solid rgba(255,255,255,0.05)",
+        backgroundColor: isTransparentNav ? "transparent" : "var(--card-bg)",
+        borderBottom: isTransparentNav ? "none" : "1px solid var(--card-border)",
         backdropFilter: isTransparentNav ? "none" : "blur(20px)",
         WebkitBackdropFilter: isTransparentNav ? "none" : "blur(20px)",
       }}
@@ -145,7 +146,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: "rgba(10, 10, 12, 0.9)",
     borderRadius: "100px",
     padding: "8px 20px",
-    color: "var(--text-primary)",
+    color: "#fff",
     fontFamily: "var(--font-sans)",
     fontSize: "0.85rem",
     fontWeight: 600,

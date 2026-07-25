@@ -30,26 +30,48 @@ import { VisualCanonGraphic } from "../../components/VisualCanonGraphic";
 import { EntityDock } from "../../components/EntityDock";
 import { ComplexityDot } from "../../components/ComplexityDot";
 import {
-  Sparkles,
-  Cpu,
-  Database,
+  Stars01 as Sparkles,
+  CpuChip01 as Cpu,
+  Database01 as Database,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  Lock,
-  Unlock,
-  Maximize2,
-  Minimize2,
-  GripVertical,
-  Loader2,
-  Wand2,
-  BookOpen,
-  Trash2,
-  Film,
-  Image as ImageIcon,
+  Lock01 as Lock,
+  LockUnlocked01 as Unlock,
+  Maximize01 as Maximize2,
+  Minimize01 as Minimize2,
+  DotsGrid as GripVertical,
+  Loading01 as Loader2,
+  MagicWand01 as Wand2,
+  BookOpen01 as BookOpen,
+  Trash01 as Trash2,
+  Film01 as Film,
+  Image01 as ImageIcon,
   Square,
   Plus,
+  ChevronDown,
+} from "@untitledui/icons";
+import {
+  GripVertical as LucideGripVertical,
+  Layers as LucideLayers,
+  Film as LucideFilm,
+  Database as LucideDatabase,
+  Link2 as LucideLink2,
+  Play as LucidePlay,
+  Eye as LucideEye,
+  Plus as LucidePlus,
+  Trash2 as LucideTrash2,
+  ChevronLeft as LucideChevronLeft,
+  ChevronRight as LucideChevronRight,
+  ChevronDown as LucideChevronDown,
+  Lock as LucideLock,
+  Square as LucideSquare,
+  Smartphone as LucideSmartphone,
+  Sparkles as LucideSparkles,
+  Loader2 as LucideLoader2,
 } from "lucide-react";
+import { HiSparkles } from "react-icons/hi2";
+
 
 /* ─── Shared entrance animation ─── */
 const fadeUp = {
@@ -62,10 +84,10 @@ const fadeUp = {
 
 /* ─── Glass panel base ─── */
 const glass: React.CSSProperties = {
-  background: "rgba(255,255,255,0.02)",
+  background: "var(--card-bg)",
   backdropFilter: "blur(20px)",
   WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(255,255,255,0.05)",
+  border: "1px solid hsl(var(--border))",
   borderRadius: "16px",
 };
 
@@ -87,81 +109,76 @@ function SortableChapterCard({
   onClick: () => void;
   onDelete: () => void;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: chapter.id });
 
   const dndTransition = transition || "";
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: [`border-color 0.2s`, `box-shadow 0.2s`, `background 0.2s`]
+    transform: transform 
+      ? `${CSS.Transform.toString(transform)} scale(${isDragging ? 0.98 : 1})` 
+      : `scale(${isDragging ? 0.98 : 1})`,
+    transition: [`border-color 0.2s`, `box-shadow 0.2s`, `background 0.2s`, `transform 0.15s`]
       .concat(dndTransition ? [dndTransition] : []).join(", "),
     opacity: isDragging ? 0.4 : 1,
     position: "relative",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    padding: "10px 14px",
-    borderRadius: "9px",
-    cursor: "grab",
-    flexShrink: 0,
     zIndex: isDragging ? 10 : 1,
-    background: isActive ? "rgba(176,38,255,0.15)" : "rgba(255,255,255,0.02)",
-    border: `1px solid ${isActive ? "rgba(176,38,255,0.7)" : "rgba(255,255,255,0.07)"}`,
-    boxShadow: isActive ? "0 0 16px rgba(176,38,255,0.25), inset 0 0 8px rgba(176,38,255,0.05)" : "none",
-    userSelect: "none",
   };
 
   return (
-    <div ref={setNodeRef} style={style} onClick={onClick}>
-      <div {...attributes} {...listeners} style={{ display: "flex", alignItems: "center", color: "rgba(255,255,255,0.2)", cursor: "grab", padding: "2px" }}>
-        <GripVertical size={12} />
-      </div>
-      <div style={{
-        width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
-        background: isActive ? "#B026FF" : chapter.isMinted ? "#00D6FF" : "rgba(255,255,255,0.2)",
-        boxShadow: isActive ? "0 0 8px rgba(176,38,255,0.7)" : chapter.isMinted ? "0 0 6px rgba(0,214,255,0.5)" : "none",
-      }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
-        <span style={{
-          fontSize: "0.68rem", fontFamily: "var(--font-mono)", fontWeight: 700,
-          color: isActive ? "#fff" : "rgba(255,255,255,0.35)",
-          letterSpacing: "0.06em",
-          textShadow: isActive ? "0 0 10px rgba(176,38,255,0.6)" : "none",
-        }}>
-          CH {String(chapter.number).padStart(2, "0")}
-        </span>
-        {chapter.isMinted && (
-          <span style={{ fontSize: "0.55rem", fontFamily: "var(--font-mono)", color: "#00D6FF", letterSpacing: "0.06em", opacity: 0.7 }}>
-            ON-CHAIN
-          </span>
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`group relative flex items-center justify-center px-4 py-2 h-11 gap-3 min-w-[110px] rounded-lg shrink-0 select-none backdrop-blur-md transition-all duration-200 
+        ${isDragging 
+          ? "bg-gray-100 border border-cyan-400 opacity-70 scale-[0.98] shadow-sm dark:bg-cyan-950/50 dark:border-cyan-400/60" 
+          : isActive 
+            ? "bg-gray-100 border-2 border-cyan-500 shadow-md dark:bg-cyan-950/60 dark:border-cyan-400" 
+            : "bg-gray-100 border border-gray-200 hover:border-cyan-400 hover:bg-gray-200/80 shadow-sm dark:bg-[#11141b]/90 dark:border-white/15 dark:hover:border-cyan-400/50 dark:hover:bg-[#181d28]"
+        }`}
+    >
+      {/* Full-card Drag Listener Handle */}
+      <div 
+        {...attributes} 
+        {...listeners} 
+        className="absolute inset-0 cursor-grab active:cursor-grabbing z-0 rounded-lg"
+      />
+
+      {/* LEFT: Chapter Number */}
+      <span 
+        className={`text-xs font-mono font-bold tracking-wider shrink-0 z-10 pointer-events-none transition-colors
+          ${isActive ? "text-cyan-600 dark:text-cyan-300" : "text-gray-700 group-hover:text-gray-900 dark:text-white/90 dark:group-hover:text-white"}`}
+      >
+        {String(chapter.number).padStart(2, "0")}
+      </span>
+
+      {/* MIDDLE: State / Play Indicator */}
+      <div className="flex items-center justify-center shrink-0 w-4 h-4 z-10 pointer-events-none">
+        {isActive ? (
+          <LucidePlay size={14} className="text-cyan-600 fill-cyan-600/30 drop-shadow-sm dark:text-cyan-400 dark:fill-cyan-400/30" strokeWidth={1.5} />
+        ) : isHovered ? (
+          <LucideEye size={14} className="text-cyan-600 dark:text-cyan-300" strokeWidth={1.5} />
+        ) : (
+          <LucidePlay size={14} className="text-gray-500 group-hover:text-gray-700 dark:text-white/40 dark:group-hover:text-white/70" strokeWidth={1.5} />
         )}
       </div>
-      {!chapter.isMinted && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          title="Delete chapter"
-          style={{
-            position: "absolute", top: "-6px", right: "-6px",
-            width: "22px", height: "22px", borderRadius: "6px", border: "1px solid rgba(255,60,60,0.3)",
-            background: "rgba(10,0,0,0.85)", color: "rgba(255,80,80,0.9)",
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            opacity: 0.7, transition: "opacity 0.15s, background 0.15s, color 0.15s",
-            padding: 0, zIndex: 10,
-          }}
-          className="chapter-delete-btn"
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = "rgba(255,40,40,0.35)"; e.currentTarget.style.color = "rgba(255,60,60,1)"; e.currentTarget.style.borderColor = "rgba(255,60,60,0.7)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.background = "rgba(10,0,0,0.85)"; e.currentTarget.style.color = "rgba(255,80,80,0.9)"; e.currentTarget.style.borderColor = "rgba(255,60,60,0.3)"; }}
-        >
-          <Trash2 size={11} />
-        </button>
-      )}
-      {chapterIndex < totalChapters - 1 && (
-        <div style={{
-          position: "absolute", right: "-17px", top: "50%", transform: "translateY(-50%)",
-          width: "16px", height: "1px",
-          background: chapter.isMinted ? "rgba(0,214,255,0.3)" : "rgba(255,255,255,0.06)",
-          pointerEvents: "none", zIndex: 0,
-        }} />
-      )}
+
+      {/* RIGHT: Delete Button or On-Chain Database Badge */}
+      <div className="flex items-center justify-end shrink-0 z-10">
+        {!chapter.isMinted ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            title="Delete chapter"
+            className="flex items-center justify-center p-1 rounded text-black hover:text-red-600 hover:bg-red-100 transition-all cursor-pointer dark:text-white/60 dark:hover:text-red-400 dark:hover:bg-red-500/20"
+          >
+            <LucideTrash2 size={14} strokeWidth={1.8} className="text-black dark:text-white/80" />
+          </button>
+        ) : (
+          <LucideDatabase size={14} className="text-emerald-500 shrink-0" strokeWidth={1.5} title="On-Chain" />
+        )}
+      </div>
     </div>
   );
 }
@@ -199,6 +216,7 @@ function WorkspaceContent() {
   const [narrativeText, setNarrativeText] = useState<string | null>(null); // local override for AI-edited text
   const [showGenConfirm, setShowGenConfirm] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const prevChaptersRef = useRef<any[]>([]);
   const activeWorldRef = useRef(activeWorld);
   const selectedChapterIdRef = useRef(selectedChapterId);
@@ -514,8 +532,9 @@ function WorkspaceContent() {
   const handleSelectChapter = useCallback((id: string) => { ws.setSelectedChapterId(id); }, []);
 
   const handleDeleteChapter = useCallback((chapterId: string) => {
-    ws.setGenerating(true);
-    deleteChapter(chapterId).then(() => { ws.setSelectedChapterId(null); ws.setChapterOrder([]); ws.setGenerating(false); });
+    ws.setSelectedChapterId(null);
+    ws.setChapterOrder([]);
+    deleteChapter(chapterId);
   }, [deleteChapter]);
 
   const handleVisualSynthesis = useCallback(() => {
@@ -590,7 +609,7 @@ function WorkspaceContent() {
             )}
           </div>
 
-          <div style={s.storyFeed}>
+          <div style={s.storyFeed} className="hide-scrollbar">
             {(selectedChapter?.storyText || narrativeText) && (
               <div style={s.beatMarkerContainer}>
                 <div style={s.beatMarkerLine} />
@@ -613,7 +632,7 @@ function WorkspaceContent() {
                       {narrativeText && !isRefiningNarrative && (
                         <button
                           onClick={() => setNarrativeText(null)}
-                          style={{ fontSize: "0.45rem", fontFamily: "var(--font-mono)", color: "rgba(255,255,255,0.25)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.08em" }}
+                          style={{ fontSize: "0.45rem", fontFamily: "var(--font-mono)", color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.08em" }}
                           title="Discard AI edit"
                         >
                           REVERT
@@ -635,7 +654,7 @@ function WorkspaceContent() {
                 <div style={s.glassSeparator} />
               </div>
             ) : (
-              <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.83rem" }}>No chapter selected.</p>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.83rem" }}>No chapter selected.</p>
             )}
           </div>
 
@@ -725,7 +744,7 @@ function WorkspaceContent() {
           }}>
             <div style={s.narrativePromptGlow} />
             <div style={s.narrativePromptHeader}>
-              <span style={s.narrativePromptLabel}>
+              <span className="text-[10px] font-mono tracking-wider text-cyan-400/80 uppercase">
                 {selectedChapter?.storyText
                   ? isGenerateImageIntent(newChapterPrompt)
                     ? "Generate Image"
@@ -733,10 +752,14 @@ function WorkspaceContent() {
                   : "Weave a Beat"}
               </span>
               {narrativeContext && !isGenerateImageIntent(newChapterPrompt) && selectedChapter?.storyText && (
-                <span style={s.contextLoadedBadge}>AI EDIT</span>
+                <span className="bg-purple-950/40 border border-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-mono ml-2">
+                  AI EDIT
+                </span>
               )}
               {isGenerateImageIntent(newChapterPrompt) && (
-                <span style={{ ...s.contextLoadedBadge, color: "rgba(0,214,255,0.7)", background: "rgba(0,214,255,0.1)" }}>IMAGE</span>
+                <span className="bg-cyan-950/40 border border-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-mono ml-2">
+                  IMAGE
+                </span>
               )}
               <button
                 type="button"
@@ -747,12 +770,12 @@ function WorkspaceContent() {
                   width: "20px", height: "20px", borderRadius: "5px", border: "1px solid rgba(255,255,255,0.08)",
                   background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.35)",
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                  padding: 0, fontSize: "0.7rem", transition: "all 0.15s",
+                  padding: 0, transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; e.currentTarget.style.borderColor = "rgba(176,38,255,0.4)"; e.currentTarget.style.background = "rgba(176,38,255,0.1)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
               >
-                {promptExpanded ? "−" : "+"}
+                <LucidePlus size={14} className={`transition-transform duration-200 ${promptExpanded ? "rotate-45" : ""}`} />
               </button>
             </div>
             <textarea
@@ -785,66 +808,96 @@ function WorkspaceContent() {
                 resize: "none",
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",
-                borderColor: isGenerateImageIntent(newChapterPrompt)
-                  ? "rgba(0,214,255,0.5)"
-                  : inputFocused
-                  ? "rgba(176,38,255,0.5)"
-                  : "rgba(255,255,255,0.06)",
-                boxShadow: isGenerateImageIntent(newChapterPrompt)
-                  ? "0 0 20px rgba(0,214,255,0.12), inset 0 0 20px rgba(0,214,255,0.03)"
-                  : inputFocused
-                  ? "0 0 20px rgba(176,38,255,0.12), inset 0 0 20px rgba(176,38,255,0.03)"
-                  : "none",
+                boxShadow: "none",
               }}
+              className="bg-background text-foreground border border-border rounded-lg focus:border-cyan-500/40 focus:outline-none focus:ring-0 transition-colors placeholder:text-muted-foreground text-sm font-sans"
             />
             <div style={s.narrativePromptFooter}>
               <ComplexityDot text={newChapterPrompt} />
-              <div style={s.narrativeGenControls}>
-                <button type="button" onClick={() => ws.setStyleLock(!styleLock)} style={{
-                  ...s.narrativeGenBtn,
-                  background: styleLock ? "rgba(176,38,255,0.15)" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${styleLock ? "rgba(176,38,255,0.5)" : "rgba(255,255,255,0.06)"}`,
-                  color: styleLock ? "#B026FF" : "rgba(255,255,255,0.4)",
-                }} title={styleLock ? "Style-Lock ON" : "Style-Lock OFF"}>
-                  {styleLock ? <Lock size={10} /> : <Unlock size={10} />}
-                  <span style={{ fontSize: "0.55rem", fontFamily: "var(--font-mono)", fontWeight: 600, letterSpacing: "0.06em" }}>LOCK</span>
+              <div style={s.narrativeGenControls} className="flex items-center gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => ws.setStyleLock(!styleLock)} 
+                  className={`h-7 px-2 rounded-md flex items-center justify-center gap-1 text-[10px] font-mono border transition-all cursor-pointer
+                    ${styleLock 
+                      ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950/50 dark:border-purple-500/30 dark:text-purple-300" 
+                      : "bg-gray-100 border-gray-200 text-gray-500 hover:text-gray-900 dark:bg-white/[0.02] dark:border-white/10 dark:text-white/50 dark:hover:text-white"
+                    }`}
+                  title={styleLock ? "Style-Lock ON" : "Style-Lock OFF"}
+                >
+                  <LucideLock size={12} strokeWidth={1.5} />
+                  <span>LOCK</span>
                 </button>
-                {(["16:9", "1:1", "9:16"] as AspectRatio[]).map((ratio) => (
-                  <button key={ratio} type="button" onClick={() => ws.setAspectRatio(ratio)} style={{
-                    ...s.narrativeGenBtn,
-                    background: aspectRatio === ratio ? "rgba(0,214,255,0.12)" : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${aspectRatio === ratio ? "rgba(0,214,255,0.4)" : "rgba(255,255,255,0.06)"}`,
-                    color: aspectRatio === ratio ? "#00D6FF" : "rgba(255,255,255,0.4)",
-                    padding: "4px 8px",
-                  }}>
-                    <AspectIcon ratio={ratio} />
-                    <span style={{ fontSize: "0.5rem", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{ratio}</span>
+                <div className="relative flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    style={{
+                      background: "hsl(var(--background))",
+                      borderColor: "hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                    className="h-7 pl-2.5 pr-2 flex justify-between items-center gap-1 rounded-md text-xs font-mono border cursor-pointer focus:outline-none focus:border-cyan-500/40 transition-all min-w-[115px] relative z-20"
+                  >
+                    <span style={{ color: "hsl(var(--foreground))" }}>{aspectRatio === "16:9" ? "16:9 (1024x576)" : aspectRatio === "1:1" ? "1:1 (1024x1024)" : "9:16 (576x1024)"}</span>
+                    <ChevronDown size={14} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
                   </button>
-                ))}
+                  {isDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setIsDropdownOpen(false)} />
+                      <ul style={{ background: "hsl(var(--background))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }} className="absolute bottom-full left-0 mb-1 w-full border rounded-md shadow-lg z-40 overflow-hidden text-xs">
+                        {[
+                          { label: "16:9 (1024x576)", value: "16:9" },
+                          { label: "1:1 (1024x1024)", value: "1:1" },
+                          { label: "9:16 (576x1024)", value: "9:16" },
+                        ].map((opt) => (
+                          <li
+                            key={opt.value}
+                            onClick={() => {
+                              ws.setAspectRatio(opt.value as AspectRatio);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`px-2.5 py-1.5 cursor-pointer hover:bg-muted transition-colors ${aspectRatio === opt.value ? "font-semibold text-cyan-600 dark:text-cyan-400" : ""}`}
+                          >
+                            {opt.label}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
                 <motion.button
                   type="submit"
                   disabled={!newChapterPrompt.trim() || isWeavingText || isRefiningNarrative}
-                  whileTap={newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? { scale: [1, 0.94, 1], transition: { duration: 0.3 } } : undefined}
-                  style={{
-                    ...s.narrativeWeaveBtn,
-                    background: isGenerateImageIntent(newChapterPrompt)
-                      ? "linear-gradient(135deg, rgba(0,214,255,0.2), rgba(176,38,255,0.12))"
-                      : "linear-gradient(135deg, rgba(176,38,255,0.2), rgba(0,214,255,0.12))",
-                    borderColor: isGenerateImageIntent(newChapterPrompt) ? "rgba(0,214,255,0.35)" : "rgba(176,38,255,0.35)",
-                    opacity: newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? 1 : 0.4,
-                    cursor: newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? "pointer" : "default",
-                  }}
+                  whileTap={newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative ? { scale: 0.96 } : undefined}
+                  className={`h-7 px-4 min-w-[80px] flex items-center justify-center gap-1.5 rounded-md font-medium text-base border transition-all 
+                    ${newChapterPrompt.trim() && !isWeavingText && !isRefiningNarrative
+                      ? "bg-purple-600 border-purple-500 hover:bg-purple-500 text-white shadow-[0_0_10px_rgba(147,51,234,0.4)] cursor-pointer"
+                      : "bg-gray-100 dark:bg-purple-950/20 text-gray-500 dark:text-white/30 border-gray-200 dark:border-purple-950/40 shadow-none cursor-default"
+                    }`}
                 >
                   {(isWeavingText || isRefiningNarrative) ? (
-                    <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} style={{ display: "inline-flex" }}>
-                      <Loader2 size={11} />
+                    <motion.span 
+                      animate={{ rotate: 360 }} 
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }} 
+                      className="inline-flex"
+                    >
+                      <LucideLoader2 size={15} />
                     </motion.span>
-                  ) : isGenerateImageIntent(newChapterPrompt) ? (
-                    <ImageIcon size={11} />
                   ) : (
-                    <Sparkles size={11} />
+                    <HiSparkles size={18} className={newChapterPrompt.trim() ? "text-white" : "text-gray-400 dark:text-white/30"} />
                   )}
-                  <span>{isWeavingText ? "Weaving..." : isRefiningNarrative ? "Editing..." : isGenerateImageIntent(newChapterPrompt) ? "Render" : selectedChapter?.storyText ? "Edit" : "Weave"}</span>
+                  <span>
+                    {isWeavingText 
+                      ? "Weaving..." 
+                      : isRefiningNarrative 
+                        ? "Editing..." 
+                        : isGenerateImageIntent(newChapterPrompt) 
+                          ? "Render" 
+                          : selectedChapter?.storyText 
+                            ? "Edit" 
+                            : "Weave"}
+                  </span>
                 </motion.button>
               </div>
             </div>
@@ -927,29 +980,61 @@ function WorkspaceContent() {
       {/* ════════════════════════════════════════════════════════
           SEQUENCE TIMELINE (Full-width Bottom)
           ════════════════════════════════════════════════════════ */}
-      <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible" style={{ ...glass, ...s.timeline }}>
-        <div style={s.timelineHeader}>
+      <motion.div 
+        variants={fadeUp} custom={3} initial="hidden" animate="visible" 
+        style={{
+          ...s.timeline,
+          background: "var(--card-bg)",
+          borderTop: "1px solid hsl(var(--border))",
+          borderLeft: "none",
+          borderRight: "none",
+          borderBottom: "none",
+          borderRadius: 0,
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
+        }}
+      >
+        <div style={s.timelineHeader} className="flex items-center gap-1.5">
+          <LucideLayers size={14} className="text-cyan-400" strokeWidth={1.5} />
           <span style={s.timelineLabel}>Sequence Timeline</span>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", color: "var(--text-muted)", letterSpacing: "0.1em" }}>
             {orderedChapters.length} CHAPTER{orderedChapters.length !== 1 ? "S" : ""}
           </span>
           <div style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
             <button onClick={() => { if (chapterIndex > 0) ws.setSelectedChapterId(orderedChapters[chapterIndex - 1].id); }} disabled={chapterIndex <= 0} style={s.timelineArrow}>
-              <ChevronLeft size={13} />
+              <LucideChevronLeft size={13} strokeWidth={1.5} />
             </button>
             <button onClick={() => { if (chapterIndex < orderedChapters.length - 1) ws.setSelectedChapterId(orderedChapters[chapterIndex + 1].id); }} disabled={chapterIndex >= orderedChapters.length - 1} style={s.timelineArrow}>
-              <ChevronRight size={13} />
+              <LucideChevronRight size={13} strokeWidth={1.5} />
             </button>
           </div>
         </div>
 
-        <div style={s.scrubTrack}>
-          <div style={s.trackLine} />
+        <div 
+          style={{
+            ...s.scrubTrack,
+            gap: "8px",
+            background: "hsl(var(--background))",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "10px",
+            padding: "6px 12px"
+          }}
+        >
+          <div style={s.trackLine} className="opacity-10" />
 
           {orderedChapters.length === 0 ? (
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "rgba(255,255,255,0.15)", alignSelf: "center" }}>
-              No chapters yet &mdash; weave a beat to begin
-            </span>
+            <div 
+              onClick={() => {
+                ws.setGenerating(true);
+                draftNewChapter("", styleLock, aspectRatio);
+                ws.setNewChapterPrompt("");
+                ws.setSelectedChapterId(null);
+                ws.setChapterOrder([]);
+              }}
+              className="group flex items-center justify-center h-11 w-28 rounded-lg border border-dashed border-gray-300 hover:border-cyan-400 bg-white/50 hover:bg-cyan-50 cursor-pointer transition-all duration-200 select-none mx-auto my-1 dark:border-white/20 dark:hover:border-cyan-400/50 dark:bg-white/[0.02] dark:hover:bg-cyan-500/[0.04]"
+            >
+              <LucidePlus size={14} className="opacity-60 group-hover:opacity-100 text-gray-500 transition-opacity dark:opacity-40 dark:text-white" strokeWidth={1.5} />
+            </div>
           ) : (
             <DndContext id="chapter-sort" sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               <SortableContext items={orderedChapters.map((ch) => ch.id)} strategy={horizontalListSortingStrategy}>
@@ -977,28 +1062,45 @@ function WorkspaceContent() {
                   disabled={generating}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    width: "50px", minWidth: "50px", height: "64px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px dashed rgba(255,255,255,0.12)",
-                    borderRadius: "10px",
+                    width: "44px", height: "44px",
+                    background: "hsl(var(--background))",
+                    border: "1px dashed hsl(var(--border))",
+                    borderRadius: "8px",
                     cursor: generating ? "default" : "pointer",
-                    color: "rgba(255,255,255,0.3)",
+                    color: "hsl(var(--foreground))",
                     opacity: generating ? 0.4 : 1,
                     transition: "all 0.2s",
                     flexShrink: 0,
                   }}
+                  className="hover:border-cyan-400/60 hover:text-cyan-300 hover:bg-cyan-500/[0.05]"
                   title="Create new chapter"
                 >
-                  <Plus size={18} />
+                  <LucidePlus size={14} strokeWidth={1.5} />
                 </motion.button>
               </SortableContext>
-              <DragOverlay>
+              <DragOverlay dropAnimation={null}>
                 {activeDragId && (() => {
                   const ch = orderedChapters.find((c) => c.id === activeDragId);
                   return ch ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "rgba(176,38,255,0.12)", borderRadius: "9px", border: "1px solid rgba(176,38,255,0.4)", backdropFilter: "blur(12px)", color: "#fff" }}>
-                      <GripVertical size={12} style={{ color: "rgba(255,255,255,0.3)" }} />
-                      <span style={{ fontSize: "0.68rem", fontFamily: "var(--font-mono)", fontWeight: 700 }}>CH {String(ch.number).padStart(2, "0")}</span>
+                    <div 
+                      className="flex items-center justify-center px-4 py-2 h-11 gap-3 rounded-lg bg-cyan-950/70 border border-cyan-400 text-cyan-300 shadow-[0_0_14px_rgba(6,182,212,0.3)] scale-[0.98] select-none pointer-events-none"
+                      style={{
+                        height: "44px",
+                      }}
+                    >
+                      <span className="text-xs font-mono font-semibold tracking-wider text-cyan-300">
+                        {String(ch.number).padStart(2, "0")}
+                      </span>
+                      <div className="flex items-center justify-center shrink-0 w-4 h-4">
+                        <LucidePlay size={14} className="text-cyan-400 fill-cyan-400/30" strokeWidth={1.5} />
+                      </div>
+                      <div className="flex items-center justify-end shrink-0">
+                        {!ch.isMinted ? (
+                          <LucideTrash2 size={14} className="text-white/30" strokeWidth={1.5} />
+                        ) : (
+                          <LucideDatabase size={14} className="text-emerald-400" strokeWidth={1.5} />
+                        )}
+                      </div>
                     </div>
                   ) : null;
                 })()}
@@ -1078,9 +1180,9 @@ function WorkspaceContent() {
 
 /* ─── AspectRatio Icon ─── */
 function AspectIcon({ ratio }: { ratio: AspectRatio }) {
-  if (ratio === "16:9") return <Film size={12} />;
-  if (ratio === "1:1") return <ImageIcon size={12} />;
-  return <Square size={10} />;
+  if (ratio === "16:9") return <LucideFilm size={13} />;
+  if (ratio === "1:1") return <LucideSquare size={13} />;
+  return <LucideSmartphone size={13} />;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1107,8 +1209,8 @@ const s: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     gap: "16px",
     minHeight: "100vh",
-    background: "#050505",
-    color: "#fff",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     position: "relative",
     overflow: "hidden",
     boxSizing: "border-box",
@@ -1122,7 +1224,7 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#050505",
+    background: "hsl(var(--background))",
   },
 
   /* ── Ambient glows ── */
@@ -1158,12 +1260,12 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: "1.45rem",
     fontWeight: 700,
     margin: 0,
-    color: "#fff",
+    color: "hsl(var(--foreground))",
   },
   worldMeta: {
     fontSize: "0.68rem",
     fontFamily: "var(--font-mono)",
-    color: "rgba(255,255,255,0.22)",
+    color: "var(--text-muted)",
     margin: "2px 0 0 0",
   },
 
@@ -1248,8 +1350,8 @@ const s: Record<string, React.CSSProperties> = {
 
   /* Document-style blocks */
   documentBlock: {
-    background: "rgba(255,255,255,0.01)",
-    border: "1px solid rgba(255,255,255,0.03)",
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "8px",
     padding: "12px 14px",
   },
@@ -1273,9 +1375,9 @@ const s: Record<string, React.CSSProperties> = {
     position: "relative",
     marginTop: "10px",
     padding: "12px 14px 10px",
-    background: "rgba(0,0,0,0.4)",
+    background: "var(--card-bg)",
     borderRadius: "12px",
-    border: "1px solid rgba(255,255,255,0.04)",
+    border: "1px solid hsl(var(--border))",
     flexShrink: 0,
   },
   narrativePromptGlow: {
@@ -1313,11 +1415,13 @@ const s: Record<string, React.CSSProperties> = {
   },
   narrativePromptInput: {
     width: "100%",
-    background: "rgba(0,0,0,0.5)",
-    border: "1px solid rgba(255,255,255,0.06)",
+    background: "hsl(var(--background))",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: "hsl(var(--border))",
     borderRadius: "10px",
     outline: "none",
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     fontSize: "0.8rem",
     padding: "8px 12px",
     fontFamily: "Inter, var(--font-sans), sans-serif",
@@ -1446,10 +1550,10 @@ const s: Record<string, React.CSSProperties> = {
     padding: "18px",
     display: "flex",
     flexDirection: "column",
-    background: "rgba(3,3,6,0.92)",
+    background: "var(--card-bg)",
     backdropFilter: "blur(40px)",
     WebkitBackdropFilter: "blur(40px)",
-    border: "1px solid rgba(255,255,255,0.05)",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "16px",
   },
 
@@ -1467,7 +1571,7 @@ const s: Record<string, React.CSSProperties> = {
   timelineLabel: {
     fontSize: "0.62rem",
     fontFamily: "var(--font-mono)",
-    color: "rgba(255,255,255,0.3)",
+    color: "var(--text-muted)",
     letterSpacing: "0.1em",
     textTransform: "uppercase" as const,
     fontWeight: 600,
@@ -1478,9 +1582,9 @@ const s: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     padding: "5px",
     borderRadius: "6px",
-    border: "1px solid rgba(255,255,255,0.06)",
-    background: "rgba(255,255,255,0.02)",
-    color: "rgba(255,255,255,0.3)",
+    border: "1px solid hsl(var(--border))",
+    background: "var(--card-bg)",
+    color: "hsl(var(--foreground))",
     cursor: "pointer",
     transition: "all 0.2s",
   },
@@ -1499,7 +1603,7 @@ const s: Record<string, React.CSSProperties> = {
     right: 0,
     top: "50%",
     height: "1px",
-    background: "rgba(255,255,255,0.04)",
+    background: "hsl(var(--border))",
     zIndex: 0,
     pointerEvents: "none",
   },
@@ -1509,14 +1613,14 @@ const s: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "10px",
     marginBottom: "10px",
   },
   panelLabel: {
     fontSize: "0.78rem",
     fontWeight: 600,
-    color: "rgba(255,255,255,0.7)",
+    color: "hsl(var(--foreground))",
     flex: 1,
   },
   chapterBadge: {

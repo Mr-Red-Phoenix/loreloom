@@ -3,11 +3,11 @@ import { SidebarSectionDividersDemo } from "../../components/SidebarSectionDivid
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#050505", color: "#fff" }}>
-      <Suspense fallback={<div style={{ width: "80px", background: "#08080a" }} />}>
+    <div className="flex min-h-screen text-foreground" style={{ background: "hsl(var(--background))" }}>
+      <Suspense fallback={<div className="w-[80px]" style={{ background: "hsl(var(--background))" }} />}>
         <SidebarSectionDividersDemo />
       </Suspense>
-      <main style={{ flex: 1, minWidth: 0, overflowY: "auto", height: "100vh", display: "flex", flexDirection: "column" }}>
+      <main className="flex-1 min-w-0 overflow-y-auto h-screen flex flex-col" style={{ background: "hsl(var(--background))" }}>
         {children}
       </main>
     </div>

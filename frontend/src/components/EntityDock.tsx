@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { User, Gem, Palette, Shield } from "lucide-react";
+import { User01 as User, Diamond01 as Gem, Palette, Shield01 as Shield } from "@untitledui/icons";
 
 interface EntityDockProps {
   protagonist: string;

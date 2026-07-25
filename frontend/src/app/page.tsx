@@ -51,7 +51,7 @@ export default function LandingPage() {
   const y5_cta = useTransform(smoothProgress, [0.83, 0.90, 1.0], [25, 0, 0], { clamp: true });
 
   return (
-    <div style={{ height: "600vh", position: "relative" }}>
+    <div className="dark bg-[#050505]" style={{ height: "600vh", position: "relative" }}>
       {/* Fixed Background Canvas Player */}
       <ScrollSequence numFrames={240} />
 
@@ -199,7 +199,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 800,
     letterSpacing: "-0.04em",
     lineHeight: 0.95,
-    color: "var(--text-primary)",
+    color: "#fff",
     textShadow: "0 0 40px rgba(255,255,255,0.2)",
     marginBottom: "16px",
   },
@@ -208,7 +208,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
     fontWeight: 500,
     letterSpacing: "-0.02em",
-    color: "var(--text-primary)",
+    color: "#fff",
     marginBottom: "24px",
   },
   headline: {
@@ -217,7 +217,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     letterSpacing: "-0.03em",
     lineHeight: 1.05,
-    color: "var(--text-primary)",
+    color: "#fff",
     marginBottom: "24px",
     textShadow: "0 0 40px rgba(0,0,0,0.9)",
   },
@@ -236,8 +236,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
   },
   btnPrimary: {
-    background: "var(--text-primary)",
-    color: "var(--background)",
+    background: "#fff",
+    color: "#050505",
     fontFamily: "var(--font-sans)",
     fontSize: "1rem",
     fontWeight: 600,
@@ -249,7 +249,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   btnSecondary: {
     background: "rgba(255,255,255,0.05)",
-    color: "var(--text-primary)",
+    color: "#fff",
     fontFamily: "var(--font-sans)",
     fontSize: "1rem",
     fontWeight: 600,

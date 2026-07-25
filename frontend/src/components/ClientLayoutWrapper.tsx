@@ -46,7 +46,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column"
   },
   footer: {
-    background: "rgba(3, 3, 6, 0.9)",
+    background: "var(--background)",
     borderTop: "1px solid var(--card-border)",
     padding: "32px 0",
     marginTop: "auto",

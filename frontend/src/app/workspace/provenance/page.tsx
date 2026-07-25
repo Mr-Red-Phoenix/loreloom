@@ -2,7 +2,7 @@
 
 import React, { Suspense } from "react";
 import { useStory } from "../../../context/StoryContext";
-import { Database, Shield, Hash } from "lucide-react";
+import { Database01 as Database, Shield01 as Shield, Hash01 as Hash } from "@untitledui/icons";
 
 function ProvenanceContent() {
   const { activeWorld } = useStory();
@@ -118,14 +118,16 @@ export default function ProvenancePage() {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: "32px 40px",
-    minHeight: "100vh",
-    background: "#050505",
-    color: "#fff",
+    minHeight: "100%",
+    flex: 1,
+    width: "100%",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     position: "relative",
     display: "flex",
     flexDirection: "column",
     gap: "28px",
-    fontFamily: "var(--font-mono)", // Monospace font requested
+    fontFamily: "var(--font-mono)",
     boxSizing: "border-box"
   },
   emptyContainer: {
@@ -133,17 +135,18 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#050505"
+    background: "hsl(var(--background))"
   },
   header: {
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "16px",
     zIndex: 10
   },
   title: {
     fontSize: "1.3rem",
     fontWeight: 700,
-    margin: 0
+    margin: 0,
+    color: "hsl(var(--foreground))"
   },
   subtitle: {
     fontSize: "0.8rem",
@@ -152,7 +155,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   ledgerPanel: {
     padding: "20px 24px",
-    background: "rgba(10, 10, 12, 0.6)",
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))",
+    borderRadius: "12px",
     display: "flex",
     flexDirection: "column",
     gap: "16px",
@@ -162,12 +167,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    borderBottom: "1px solid rgba(255,255,255,0.03)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "10px"
   },
   panelTitle: {
     fontSize: "0.8rem",
-    color: "rgba(255,255,255,0.85)",
+    color: "hsl(var(--foreground))",
     fontWeight: 600,
     letterSpacing: "0.05em",
     textTransform: "uppercase"
@@ -183,18 +188,18 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     alignItems: "center",
     fontSize: "0.8rem",
-    borderBottom: "1px solid rgba(255,255,255,0.01)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "6px"
   },
   metaLabel: {
     color: "var(--text-muted)"
   },
   metaValue: {
-    color: "rgba(255,255,255,0.8)"
+    color: "hsl(var(--foreground))"
   },
   divider: {
     height: "1px",
-    background: "rgba(255,255,255,0.03)"
+    background: "hsl(var(--border))"
   },
   metricsList: {
     display: "flex",
@@ -212,19 +217,19 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     alignItems: "center",
     fontSize: "0.8rem",
-    borderBottom: "1px solid rgba(255,255,255,0.01)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "6px"
   },
   metricLabel: {
-    color: "rgba(255,255,255,0.7)"
+    color: "var(--text-secondary)"
   },
   metricValue: {
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     fontWeight: 600
   },
   blockRow: {
-    background: "rgba(255,255,255,0.01)",
-    border: "1px solid rgba(255,255,255,0.02)",
+    background: "hsl(var(--background))",
+    border: "1px solid hsl(var(--border))",
     borderRadius: "8px",
     padding: "12px 16px",
     display: "flex",
@@ -234,7 +239,7 @@ const styles: Record<string, React.CSSProperties> = {
   blockTitle: {
     fontSize: "0.75rem",
     fontWeight: 600,
-    color: "rgba(255,255,255,0.85)"
+    color: "hsl(var(--foreground))"
   },
   blockHash: {
     fontSize: "0.7rem",

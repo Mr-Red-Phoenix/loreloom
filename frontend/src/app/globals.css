@@ -2,30 +2,61 @@
 @import "tailwindcss";
 @source "../components";
 
-:root {
-  --background: #050505;
-  --foreground: #ffffff;
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --border: 0 0% 89.8%;
+    --primary-glow: 260 100% 95%;
+    
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --card-border: rgba(0, 0, 0, 0.1);
+    
+    --accent-purple: #9d25e0;
+    --accent-purple-glow: rgba(157, 37, 224, 0.3);
+    --accent-cyan: #00acc1;
+    --accent-cyan-glow: rgba(0, 172, 193, 0.3);
+    --accent-gold: #e6b800;
+    --accent-gold-glow: rgba(230, 184, 0, 0.3);
+    
+    --text-primary: rgba(0, 0, 0, 0.9);
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --text-muted: rgba(0, 0, 0, 0.4);
+    
+    --font-sans: 'Outfit', sans-serif;
+    --font-mono: 'Space Grotesk', monospace;
+    --font-inter: 'Inter', sans-serif;
+    
+    --nav-height: 72px;
+  }
   
-  --card-bg: rgba(10, 10, 12, 0.6);
-  --card-border: rgba(255, 255, 255, 0.05);
-  
-  --accent-purple: #B026FF;
-  --accent-purple-glow: rgba(176, 38, 255, 0.5);
-  --accent-cyan: #00D6FF;
-  --accent-cyan-glow: rgba(0, 214, 255, 0.4);
-  --accent-gold: #FFD700;
-  --accent-gold-glow: rgba(255, 215, 0, 0.4);
-  
-  --text-primary: rgba(255, 255, 255, 0.9);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-muted: rgba(255, 255, 255, 0.4);
-  
-  --font-sans: 'Outfit', sans-serif;
-  --font-mono: 'Space Grotesk', monospace;
-  --font-inter: 'Inter', sans-serif;
-  
-  --nav-height: 72px;
+  .dark {
+    --background: 0 0% 2%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --primary-glow: 260 100% 60%;
 
+    --card-bg: rgba(10, 10, 12, 0.6);
+    --card-border: rgba(255, 255, 255, 0.05);
+    
+    --accent-purple: #B026FF;
+    --accent-purple-glow: rgba(176, 38, 255, 0.5);
+    --accent-cyan: #00D6FF;
+    --accent-cyan-glow: rgba(0, 214, 255, 0.4);
+    --accent-gold: #FFD700;
+    --accent-gold-glow: rgba(255, 215, 0, 0.4);
+    
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-muted: rgba(255, 255, 255, 0.4);
+  }
+}
+
+:root, .dark {
   /* ── shadcn/Tailwind CSS variable aliases (used by auth component) ── */
   --color-background: #050505;
   --color-foreground: #ffffff;
@@ -59,8 +90,8 @@
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(hsl(var(--foreground) / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--foreground) / 0.08) 1px, transparent 1px);
   background-size: 32px 32px;
   opacity: 0.25;
   z-index: 0;
@@ -562,9 +593,9 @@ body {
   font-family: var(--font-inter);
   font-size: 1.15rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-secondary);
   letter-spacing: 0.05em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   display: inline-block;
   animation: loader-letter-anim 1.5s ease-in-out infinite;
   z-index: 2;

@@ -2,7 +2,8 @@
 
 import React, { Suspense, useState } from "react";
 import { useStory } from "../../../context/StoryContext";
-import { Image as ImageIcon, BookOpen, Layers, Trash2, X } from "lucide-react";
+import { Image as LucideImageIcon } from "lucide-react";
+import { BookOpen01 as BookOpen, LayersThree01 as Layers, Trash01 as Trash2, XClose as X } from "@untitledui/icons";
 
 // Inline procedural visual canon graphic component
 function VisualCanonThumbnail({ seed }: { seed: string }) {
@@ -55,7 +56,7 @@ function GalleryContent() {
       
       <div style={styles.header}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <ImageIcon size={22} color="var(--accent-purple)" />
+          <LucideImageIcon size={24} style={{ color: "var(--accent-purple)", flexShrink: 0 }} />
           <h1 className="title-cyber" style={styles.title}>CANON VISUAL GALLERY</h1>
         </div>
         <p style={styles.subtitle}>Archived visual artifacts and spatial grids of {activeWorld.name}.</p>
@@ -96,7 +97,7 @@ function GalleryContent() {
         <div style={styles.overlay} onClick={() => setDeleteTarget(null)}>
           <div className="glass-panel" style={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Delete Chapter</span>
+              <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>Delete Chapter</span>
               <button onClick={() => setDeleteTarget(null)} style={styles.closeBtn}>
                 <X size={16} />
               </button>
@@ -139,9 +140,11 @@ export default function GalleryPage() {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: "32px 40px",
-    minHeight: "100vh",
-    background: "#050505",
-    color: "#fff",
+    minHeight: "100%",
+    flex: 1,
+    width: "100%",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     position: "relative",
     display: "flex",
     flexDirection: "column",
@@ -153,17 +156,18 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#050505"
+    background: "hsl(var(--background))"
   },
   header: {
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid hsl(var(--border))",
     paddingBottom: "16px",
     zIndex: 10
   },
   title: {
     fontSize: "1.3rem",
     fontWeight: 700,
-    margin: 0
+    margin: 0,
+    color: "hsl(var(--foreground))"
   },
   subtitle: {
     fontSize: "0.85rem",
@@ -181,7 +185,8 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    background: "rgba(10, 10, 12, 0.6)"
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))"
   },
   cardContent: {
     padding: "16px 20px"
@@ -195,7 +200,7 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: {
     fontSize: "0.95rem",
     fontWeight: 600,
-    color: "#fff",
+    color: "hsl(var(--foreground))",
     margin: "0 0 8px 0"
   },
   cardText: {
@@ -213,7 +218,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: "6px",
     border: "none",
     background: "rgba(255,60,60,0.12)",
-    color: "rgba(255,80,80,0.6)",
+    color: "#dc2626",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -237,8 +242,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "24px",
     borderRadius: "12px",
     minWidth: "320px",
-    background: "rgba(12,12,16,0.95)",
-    border: "1px solid rgba(255,255,255,0.06)",
+    background: "var(--card-bg)",
+    border: "1px solid hsl(var(--border))",
   },
   modalHeader: {
     display: "flex",
@@ -256,9 +261,9 @@ const styles: Record<string, React.CSSProperties> = {
   cancelBtn: {
     padding: "8px 16px",
     borderRadius: "8px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "transparent",
-    color: "var(--text-secondary)",
+    border: "1px solid hsl(var(--border))",
+    background: "hsl(var(--background))",
+    color: "hsl(var(--foreground))",
     cursor: "pointer",
     fontSize: "0.8rem",
   },
@@ -266,8 +271,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "8px 16px",
     borderRadius: "8px",
     border: "none",
-    background: "rgba(255,60,60,0.2)",
-    color: "rgba(255,80,80,0.9)",
+    background: "rgba(239,68,68,0.15)",
+    color: "#dc2626",
     cursor: "pointer",
     fontSize: "0.8rem",
     fontWeight: 600,

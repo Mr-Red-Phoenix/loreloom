@@ -1,6 +1,6 @@
 "use client";
  
-import { SunIcon as Sunburst } from "lucide-react";
+import { Sun as Sunburst } from "@untitledui/icons";
 import { useState } from "react";
 
  

@@ -8,6 +8,7 @@
     "test": "hardhat test",
     "clean": "hardhat clean",
     "role:minter": "node scripts/print-minter-role.js",
+    "role:grant": "hardhat run scripts/grant-minter-role.js --network xlayerTestnet",
     "deploy:testnet:plan": "npm run compile && node scripts/deploy-xlayer-testnet.js",
     "deploy:testnet": "npm run compile && node scripts/deploy-xlayer-testnet.js --execute",
     "deploy:testnet:direct": "hardhat run scripts/deploy-direct-xlayer-testnet.js --network xlayerTestnet"

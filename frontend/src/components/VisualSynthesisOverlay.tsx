@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw01 as RefreshCw } from "@untitledui/icons";
 
 /**
  * A glassmorphic circular overlay button that appears on the Main Canvas

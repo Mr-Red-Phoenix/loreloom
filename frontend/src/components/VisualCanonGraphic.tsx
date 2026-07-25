@@ -39,7 +39,7 @@ export function VisualCanonGraphic({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "rgba(0,0,0,0.2)"
+        background: "var(--card-bg)"
       }}>
         {previousSeed && previousSeed.startsWith("http") && (
           <div style={{ position: "absolute", inset: 0, opacity: 0.15, filter: "grayscale(1) blur(2px)" }}>
@@ -75,7 +75,7 @@ export function VisualCanonGraphic({
             )}
           </div>
         ) : (
-          <div style={{ width: "100%", height: "100%", background: "rgba(0,0,0,0.1)" }} />
+          <div style={{ width: "100%", height: "100%", background: "var(--card-bg)" }} />
         )}
       </div>
     );

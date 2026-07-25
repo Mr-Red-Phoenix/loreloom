@@ -7,22 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useStory } from "../../context/StoryContext";
 import { SidebarSectionDividersDemo } from "../../components/SidebarSectionDividers";
 import { 
-  Home, 
-  Folder, 
-  Sparkles, 
-  ChevronDown, 
-  ChevronRight,
-  Image as ImageIcon,
-  Video,
-  MonitorPlay,
-  Layers,
-  ArrowRight,
-  MoreHorizontal,
-  Trash2,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Settings
-} from "lucide-react";
+  DotsHorizontal,
+  Trash01
+} from "@untitledui/icons";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -35,33 +22,6 @@ export default function DashboardPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [showLimitAlert, setShowLimitAlert] = useState(false);
-
-  const models = [
-    { 
-      name: "Sedans 2.2", 
-      type: "Image Generation",
-      desc: "Ultra-HD visual synthesis with enhanced raytracing.",
-      bgImage: "/models/sedans.png"
-    },
-    { 
-      name: "Gemini Nano", 
-      type: "Text Generation",
-      desc: "Efficient on-device language model for fast reasoning and text generation.",
-      bgImage: "/models/nenunnanu.png"
-    },
-    { 
-      name: "Light King 3.0", 
-      type: "Image Generation",
-      desc: "The bleeding edge of cinematic realism and lighting.",
-      bgImage: "/models/light_king.png"
-    },
-    { 
-      name: "Happy Horse 1.1", 
-      type: "Video Generation",
-      desc: "Fluid dynamic motion physics for narrative shorts.",
-      bgImage: "/models/happy_horse.png"
-    }
-  ];
 
   return (
     <div style={styles.dashboardContainer}>
@@ -84,7 +44,7 @@ export default function DashboardPage() {
                   key={tab}
                   style={{
                     ...styles.tabLink,
-                    color: isActive ? "#fff" : "var(--text-secondary)",
+                    color: isActive ? "var(--foreground)" : "var(--text-secondary)",
                     position: "relative",
                     zIndex: 1
                   }}
@@ -174,6 +134,21 @@ export default function DashboardPage() {
               <span style={styles.viewAllLink}>View all</span>
             </div>
             
+            {!worlds || worlds.length === 0 ? (
+              <div style={{ 
+                color: "var(--text-secondary)", 
+                fontFamily: "var(--font-inter)", 
+                fontSize: "0.8rem", 
+                padding: "24px 20px",
+                textAlign: "center",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px dashed rgba(255, 255, 255, 0.1)",
+                borderRadius: "12px",
+                marginTop: "12px"
+              }}>
+                No recent projects found
+              </div>
+            ) : (
             <div style={styles.recentGrid}>
               {worlds.slice(0, 2).map((world) => (
                 <motion.div 
@@ -227,7 +202,7 @@ export default function DashboardPage() {
                         }} 
                         style={{background: "transparent", border: "none", color: "var(--text-secondary)", cursor: "pointer", padding: "4px"}}
                       >
-                        <MoreHorizontal size={20} />
+                        <DotsHorizontal size={20} />
                       </button>
                       
                       <AnimatePresence>
@@ -241,14 +216,14 @@ export default function DashboardPage() {
                               position: "absolute",
                               top: "100%",
                               right: 0,
-                              background: "rgba(20, 20, 25, 0.95)",
+                              background: "var(--card-bg)",
                               backdropFilter: "blur(10px)",
-                              border: "1px solid rgba(255,255,255,0.1)",
+                              border: "1px solid hsl(var(--border))",
                               borderRadius: "8px",
                               padding: "4px",
                               minWidth: "140px",
                               zIndex: 10,
-                              boxShadow: "0 10px 30px rgba(0,0,0,0.5)"
+                              boxShadow: "0 10px 30px rgba(0,0,0,0.15)"
                             }}
                           >
                             <button
@@ -276,7 +251,7 @@ export default function DashboardPage() {
                               onMouseOver={(e) => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"}
                               onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
                             >
-                              <Trash2 size={16} />
+                              <Trash01 size={16} />
                               Delete Project
                             </button>
                           </motion.div>
@@ -287,82 +262,7 @@ export default function DashboardPage() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
-
-          {/* New Models Section */}
-          <motion.div 
-            variants={{
-              hidden: { opacity: 0, y: 15 },
-              visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 28 } }
-            }}
-            style={styles.sectionContainer}
-          >
-            <div style={styles.sectionHeader}>
-              <h2 style={styles.sectionTitle}>New models</h2>
-            </div>
-            
-            <div style={styles.modelsGrid}>
-              {/* Featured Large Model */}
-              <motion.div 
-                whileHover={{ 
-                  scale: 1.01,
-                  borderColor: "rgba(176,38,255,0.6)",
-                  boxShadow: "0 12px 40px rgba(176, 38, 255, 0.25)"
-                }}
-                transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                style={{
-                  ...styles.modelCardLarge, 
-                  backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0)), url(${models[0].bgImage})`, 
-                  backgroundSize: "cover", 
-                  backgroundPosition: "center", 
-                  borderColor: "rgba(176,38,255,0.3)",
-                  transition: "border-color 0.3s ease, box-shadow 0.3s ease"
-                }}
-              >
-                <div style={styles.modelIconBadge}><ImageIcon size={14} /></div>
-                <div style={styles.modelContent}>
-                  <h3 style={styles.modelNameLarge}>{models[0].name}</h3>
-                  <p style={styles.modelDesc}>{models[0].desc}</p>
-                  <div style={styles.modelSpecs}>
-                    {models[0].type}
-                  </div>
-                </div>
-                <motion.div 
-                  whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.2)" }}
-                  style={styles.modelHoverAction}
-                >
-                  <ArrowRight size={18} />
-                </motion.div>
-              </motion.div>
-
-              {/* Smaller Model Cards Row */}
-              <div style={styles.modelsRow}>
-                {models.slice(1).map((model, idx) => (
-                  <motion.div 
-                    key={idx} 
-                    whileHover={{ 
-                      scale: 1.025,
-                      borderColor: "rgba(0, 214, 255, 0.4)",
-                      boxShadow: "0 10px 30px rgba(0, 214, 255, 0.15)"
-                    }}
-                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                    style={{
-                      ...styles.modelCardSmall, 
-                      backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.3) 100%), url(${model.bgImage})`, 
-                      backgroundSize: "cover", 
-                      backgroundPosition: "center", 
-                      borderColor: "rgba(255,255,255,0.1)",
-                      transition: "border-color 0.3s ease, box-shadow 0.3s ease"
-                    }}
-                  >
-                    <div style={styles.modelContent}>
-                      <h3 style={model.name === "Gemini Nano" ? { ...styles.modelName, color: "var(--accent-cyan)" } : styles.modelName}>{model.name}</h3>
-                      <p style={styles.modelDescSmall}>{model.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            )}
           </motion.div>
 
         </motion.div>
@@ -386,17 +286,17 @@ export default function DashboardPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               style={{
-                background: "rgba(20, 20, 25, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--card-bg)",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "16px",
                 padding: "32px",
                 maxWidth: "400px",
                 width: "100%",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                 textAlign: "center"
               }}
             >
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "16px", fontFamily: "var(--font-sans)" }}>Delete Project?</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "16px", fontFamily: "var(--font-sans)", color: "hsl(var(--foreground))" }}>Delete Project?</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "32px", lineHeight: 1.5 }}>
                 Are you sure you want to delete this project? This action cannot be undone and all canonical data will be lost.
               </p>
@@ -404,9 +304,9 @@ export default function DashboardPage() {
                 <button 
                   onClick={() => setProjectToDelete(null)}
                   style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "var(--text-primary)",
+                    background: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
                     padding: "10px 24px",
                     borderRadius: "8px",
                     cursor: "pointer",
@@ -422,14 +322,14 @@ export default function DashboardPage() {
                     setProjectToDelete(null);
                   }}
                   style={{
-                    background: "rgba(239, 68, 68, 0.2)",
-                    border: "1px solid rgba(239, 68, 68, 0.5)",
-                    color: "#fca5a5",
+                    background: "rgba(239, 68, 68, 0.15)",
+                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                    color: "#dc2626",
                     padding: "10px 24px",
                     borderRadius: "8px",
                     cursor: "pointer",
                     fontFamily: "var(--font-inter)",
-                    fontWeight: 500
+                    fontWeight: 600
                   }}
                 >
                   Delete Permanently
@@ -458,13 +358,13 @@ export default function DashboardPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               style={{
-                background: "rgba(20, 20, 25, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--card-bg)",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "16px",
                 padding: "32px",
                 maxWidth: "400px",
                 width: "100%",
-                boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                 textAlign: "center"
               }}
             >
@@ -547,7 +447,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "var(--font-inter)",
     fontWeight: 500,
     fontSize: "0.85rem",
-    color: "#fff",
+    color: "var(--foreground)",
   },
   profileStatus: {
     fontFamily: "var(--font-inter)",
@@ -581,8 +481,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "var(--font-inter)",
     fontSize: "0.85rem",
     fontWeight: 500,
-    color: "#fff",
-    background: "rgba(255, 255, 255, 0.05)",
+    color: "var(--foreground)",
+    background: "var(--card-bg)",
+    border: "1px solid var(--card-border)",
     borderRadius: "6px",
     cursor: "pointer",
   },
@@ -657,7 +558,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: "column",
     position: "relative",
     zIndex: 10,
-    background: "rgba(5, 5, 5, 0.8)",
+    background: "var(--background)",
     overflowY: "auto",
     height: "100vh",
   },
@@ -666,7 +567,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "24px 48px",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    borderBottom: "1px solid var(--border)",
   },
   tabsContainer: {
     display: "flex",
@@ -729,14 +630,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "var(--font-inter)",
     fontWeight: 600,
     fontSize: "1.2rem",
-    color: "#fff",
+    color: "var(--foreground)",
   },
   viewAllLink: {
     fontFamily: "var(--font-inter)",
     fontSize: "0.85rem",
     color: "var(--text-secondary)",
     cursor: "pointer",
-    border: "1px solid rgba(255,255,255,0.1)",
+    border: "1px solid var(--border)",
     padding: "6px 16px",
     borderRadius: "100px",
     transition: "background 0.2s",
@@ -757,9 +658,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   recentThumbnail: {
     height: "140px",
-    background: "rgba(255,255,255,0.03)",
+    background: "var(--card-bg)",
     borderRadius: "12px",
-    border: "1px solid rgba(255,255,255,0.05)",
+    border: "1px solid var(--border)",
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
@@ -786,7 +687,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "var(--font-inter)",
     fontWeight: 500,
     fontSize: "0.9rem",
-    color: "#fff",
+    color: "var(--foreground)",
   },
   recentProjectMeta: {
     fontFamily: "var(--font-inter)",

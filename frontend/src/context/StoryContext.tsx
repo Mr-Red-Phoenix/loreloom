@@ -423,7 +423,9 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const draftNewChapter = async (prompt: string, styleLock?: boolean, aspectRatio?: string) => {
-    if (!activeWorldId || activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
+    if (!activeWorldId) return;
+
+    if (activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
       // Mock fallback behavior for sandbox worlds
       setWorlds((prev) =>
         prev.map((world) => {
@@ -466,6 +468,31 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
+    // Optimistically add draft chapter to local state for instant 0ms perceived creation latency
+    const currentChapters = activeWorld?.chapters || [];
+    const nextNum = currentChapters.length + 1;
+    const tempId = `temp-${Date.now()}`;
+    const tempChapter: Chapter = {
+      id: tempId,
+      number: nextNum,
+      title: `Chapter ${nextNum}`,
+      storyText: "AI is weaving the chapter story...",
+      illustrationSeed: "awaiting-synthesis",
+      isMinted: false,
+      prompt: prompt || "New Beat",
+      status: "draft"
+    };
+
+    setWorlds((prev) =>
+      prev.map((world) => {
+        if (world.id !== activeWorldId) return world;
+        return {
+          ...world,
+          chapters: [...world.chapters, tempChapter]
+        };
+      })
+    );
+
     try {
       console.log(`[StoryContext] Requesting new draft chapter creation for world ${activeWorldId}...`);
       const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters`, {
@@ -474,7 +501,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
 
       if (!response.ok) {
-        const err = await response.json();
+        const err = await response.json().catch(() => ({}));
         throw new Error(err.error ?? "Failed to create chapter");
       }
 
@@ -553,17 +580,19 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteChapter = async (chapterId: string) => {
     if (!activeWorld) return;
 
-    // Mock worlds: remove chapter locally
+    // Optimistically remove chapter locally first for instant zero-latency UI
+    setWorlds((prev) =>
+      prev.map((world) => {
+        if (world.id !== activeWorldId) return world;
+        return {
+          ...world,
+          chapters: world.chapters.filter((ch) => ch.id !== chapterId)
+        };
+      })
+    );
+
+    // Mock worlds: return immediately
     if (activeWorldId?.startsWith("world-neo-") || activeWorldId?.startsWith("world-aetheria")) {
-      setWorlds((prev) =>
-        prev.map((world) => {
-          if (world.id !== activeWorldId) return world;
-          return {
-            ...world,
-            chapters: world.chapters.filter((ch) => ch.id !== chapterId)
-          };
-        })
-      );
       return;
     }
 
@@ -576,12 +605,9 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({ error: "Failed to delete chapter" }));
-        // 404 means chapter was already deleted — treat as success
         if (response.status === 404) return;
         throw new Error(err.error ?? "Failed to delete chapter");
       }
-
-      // Background sync poll will update the world state.
     } catch (error) {
       console.error("Error deleting chapter:", error);
     }
