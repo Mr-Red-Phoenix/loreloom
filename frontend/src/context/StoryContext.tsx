@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useWorldStore } from "../store/useWorldStore";
+import { createClient } from "@/lib/supabase/client";
 
 export interface Chapter {
   id: string;
@@ -62,76 +63,6 @@ const StoryContext = createContext<StoryContextType | undefined>(undefined);
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 const WALLET_ADDRESS = process.env.NEXT_PUBLIC_WALLET_ADDRESS || "0xa33Ebc28fF3b0135ba2DaC18990DDDc162Dc2467";
 
-const PREPOPULATED_WORLDS: World[] = [
-  {
-    id: "world-neo-tokyo",
-    name: "Neo-Tokyo Noir",
-    premise: "A sprawling cyberpunk metropolis where memories are traded as physical shards in the black market, and the rain never stops.",
-    style: "Cyberpunk / Neon Noir",
-    protagonistName: "Kaito Vance",
-    protagonistDesc: "A cynical private detective with a retro-fitted cybernetic eye that detects thermal residue and digital traces.",
-    relicName: "The Obsidian Shard",
-    createdAt: "2026-07-10T12:00:00Z",
-    status: "active",
-    chapters: [
-      {
-        id: "tokyo-ch-1",
-        number: 1,
-        title: "The Rain-Slicked Grid",
-        storyText: "Kaito Vance pulled his collar up against the acid rain of Shibuya Sub-sector 9. The neon signs flickered above, casting long, violet shadows across the alley. In his pocket, the Obsidian Shard hummed—a memory container rumored to hold the final thoughts of the city's lead architect. As he activated his cybernetic eye, the world dissolved into thermal signatures, revealing a lone figure waiting in the smog ahead.",
-        illustrationSeed: "grid-nodes",
-        isMinted: true,
-        mintData: {
-          tokenId: "0x78a1",
-          txHash: "0x5a31b40210bc93ea6518a20d4187f54129bbfa7a4e610d937a505b221081fa2c",
-          ipfsHash: "QmYwAPzwh3pARwKkzF2YNv62LycXg4DQM75bY75Ga7M8d2",
-          blockNumber: 19842104,
-          timestamp: "2026-07-10T12:30:00Z"
-        },
-        prompt: "Initialize the cyberpunk world. Kaito Vance stands in a rainy neon alley holding the Obsidian Shard."
-      },
-      {
-        id: "tokyo-ch-2",
-        number: 2,
-        title: "Neon Confessional",
-        storyText: "The figure in the smog was Clara, a neural-hacker whose reputation preceded her. She didn't speak; instead, she tapped her temple, offering a direct sync. Vance hesitated, then connected his jack. Immediately, the wet concrete alley disappeared. He was standing inside a cathedral of pure light, constructed from towers of glowing code. 'They know you have it, Kaito,' Clara's voice echoed through the datastream. 'And they are coming to format your soul.'",
-        illustrationSeed: "digital-cathedral",
-        isMinted: false,
-        prompt: "Meet neural-hacker Clara in the alley, sync minds, and enter a glowing code cathedral grid."
-      }
-    ]
-  },
-  {
-    id: "world-aetheria",
-    name: "Chronicles of Aetheria",
-    premise: "A skyworld of floating islands powered by ancient levitational crystals, where airships navigate endless currents and mechanical beasts guard forgotten ruins.",
-    style: "Aetherpunk / Sky Fantasy",
-    protagonistName: "Captain Lyra Stormborn",
-    protagonistDesc: "The daring captain of the wind-skimmer 'Aetherius', wearing brass goggles and carrying a mechanical sky-chart compass.",
-    relicName: "The Aetheric Compass",
-    createdAt: "2026-07-11T08:00:00Z",
-    status: "active",
-    chapters: [
-      {
-        id: "aether-ch-1",
-        number: 1,
-        title: "The Edge of the Sky",
-        storyText: "From the helm of the Aetherius, Captain Lyra Stormborn watched the sun set behind the floating spires of Solaria. The sky was an ocean of gold and crimson. In her hand, the Aetheric Compass needle spun wildly, pointing not north, but directly downward—into the Storm Abyss, a cloud layer no airship had ever traversed and survived. 'Steady, crew,' she whispered, adjusting the throttle. 'We are going down.'",
-        illustrationSeed: "floating-islands",
-        isMinted: true,
-        mintData: {
-          tokenId: "0x78a2",
-          txHash: "0xbb732a106bcdeef321fa77c8e9bfa21092a1883b276d338a0f91a27bba09ea76",
-          ipfsHash: "QmZ3817Ga7M8d2YwAPzwh3pARwKkzF2YNv62LycXg4DQM75b",
-          blockNumber: 19842890,
-          timestamp: "2026-07-11T08:15:00Z"
-        },
-        prompt: "Aetherpunk setting. Captain Lyra at the helm of the airship Aetherius, holding a glowing compass looking at sky islands."
-      }
-    ]
-  }
-];
-
 // Backend API response shapes for type-safe mapping
 interface BackendWorldRow {
   id: string;
@@ -169,12 +100,12 @@ function mapBackendWorld(backendWorld: BackendWorldRow, backendChapters: Backend
     createdAt: backendWorld.created_at,
     status: backendWorld.status,
     referenceImageUrl: backendWorld.reference_image_url,
-    chapters: (backendChapters || []).map((ch) => ({
+    chapters: (backendChapters || []).map((ch, idx) => ({
       id: ch.id,
-      number: ch.chapter_index,
-      title: `Chapter ${ch.chapter_index}`,
+      number: idx + 1,
+      title: `Chapter ${idx + 1}`,
       storyText: ch.content || "AI is weaving the chapter story...",
-      illustrationSeed: ch.image_url || "awaiting-synthesis",
+      illustrationSeed: ch.image_url || (ch.status === "failed" ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop" : "awaiting-synthesis"),
       isMinted: ch.status === "minted" || ch.chapter_token_id !== null,
       prompt: ch.scene_description || "Generated beat",
       status: ch.status
@@ -183,16 +114,39 @@ function mapBackendWorld(backendWorld: BackendWorldRow, backendChapters: Backend
 }
 
 export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [worlds, setWorlds] = useState<World[]>(PREPOPULATED_WORLDS);
-  const [activeWorldId, setActiveWorldId] = useState<string | null>("world-neo-tokyo");
+  // Each user has their own isolated projects list; default is empty [] for new users
+  const [worlds, setWorlds] = useState<World[]>([]);
+  const [activeWorldId, setActiveWorldId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const setHeroName = useWorldStore((s) => s.setHeroName);
 
-  // Helper to fetch single world details; returns true on success, false on failure
+  // Sync Supabase user authentication session
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const supabase = createClient();
+
+    const syncUserSession = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentId = user ? user.id : (localStorage.getItem("loreloom_active_wallet") || null);
+      setUserId(currentId);
+    };
+
+    syncUserSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentId = session?.user ? session.user.id : (localStorage.getItem("loreloom_active_wallet") || null);
+      setUserId(currentId);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Fetch single world details helper
   const fetchWorld = useCallback(async (id: string): Promise<boolean> => {
-    // Avoid fetching mock prepopulated worlds from backend
-    if (id.startsWith("world-neo-") || id.startsWith("world-aetheria")) return true;
-    
     try {
       const response = await fetch(`${API_URL}/api/worlds/${id}`);
       if (!response.ok) throw new Error("Failed to fetch world details");
@@ -214,95 +168,129 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
-  // Hydration-safe initial state loading
+  // Load isolated projects per logged-in user
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedWorlds = localStorage.getItem("loreloom_worlds");
-      const savedActiveId = localStorage.getItem("loreloom_active_world_id");
-      const savedIds = localStorage.getItem("loreloom_world_ids");
-      
+    if (typeof window === "undefined") return;
+
+    if (!userId) {
+      setWorlds([]);
+      setActiveWorldId(null);
+      setIsLoaded(true);
+      return;
+    }
+
+    const loadUserWorlds = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/worlds?creatorId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data.worlds) && data.worlds.length > 0) {
+            const mappedWorlds = data.worlds.map((w: any) => mapBackendWorld(w, w.chapters || []));
+            setWorlds(mappedWorlds);
+            setActiveWorldId((prev) => (prev && mappedWorlds.some((mw: World) => mw.id === prev) ? prev : mappedWorlds[0].id));
+            setIsLoaded(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("[StoryContext] Error loading backend user worlds:", err);
+      }
+
+      // Namespaced local fallback for current user
+      const userStorageKey = `loreloom_worlds_${userId}`;
+      const userActiveKey = `loreloom_active_world_id_${userId}`;
+      const savedWorlds = localStorage.getItem(userStorageKey);
+      const savedActiveId = localStorage.getItem(userActiveKey);
+
       if (savedWorlds) {
         try {
-          setWorlds(JSON.parse(savedWorlds));
+          const parsed = JSON.parse(savedWorlds);
+          setWorlds(parsed);
+          if (savedActiveId) setActiveWorldId(savedActiveId);
         } catch (e) {
-          console.error("Failed to parse saved worlds", e);
+          console.error("Failed to parse saved user worlds", e);
+          setWorlds([]);
+          setActiveWorldId(null);
         }
-      }
-      if (savedActiveId) {
-        setActiveWorldId(savedActiveId);
-      }
-
-      if (savedIds) {
-        try {
-          const ids: string[] = JSON.parse(savedIds);
-          // Fetch real backend worlds in the background
-          ids.forEach((id) => fetchWorld(id));
-        } catch (e) {
-          console.error("Failed to parse saved world IDs", e);
-        }
+      } else {
+        // New user has 0 projects by default
+        setWorlds([]);
+        setActiveWorldId(null);
       }
       setIsLoaded(true);
-    }
-  }, [fetchWorld]);
+    };
 
-  // Persist state metadata
+    loadUserWorlds();
+  }, [userId]);
+
+  // Auto-fetch activeWorld details if not in worlds list yet
   useEffect(() => {
-    if (isLoaded && typeof window !== "undefined") {
-      // Filter out mapped backend worlds for raw local persistence,
-      // keeping only local-only mock worlds or general shapes
-      localStorage.setItem("loreloom_worlds", JSON.stringify(worlds.filter(w => w.id.startsWith("world-neo-") || w.id.startsWith("world-aetheria"))));
-      
-      const realIds = worlds.filter(w => !w.id.startsWith("world-neo-") && !w.id.startsWith("world-aetheria")).map(w => w.id);
-      localStorage.setItem("loreloom_world_ids", JSON.stringify(realIds));
-      
+    if (activeWorldId && !worlds.some((w) => w.id === activeWorldId)) {
+      fetchWorld(activeWorldId);
+    }
+  }, [activeWorldId, worlds, fetchWorld]);
+
+  // Persist isolated user state metadata
+  useEffect(() => {
+    if (isLoaded && typeof window !== "undefined" && userId) {
+      const userStorageKey = `loreloom_worlds_${userId}`;
+      const userActiveKey = `loreloom_active_world_id_${userId}`;
+
+      localStorage.setItem(userStorageKey, JSON.stringify(worlds));
       if (activeWorldId) {
-        localStorage.setItem("loreloom_active_world_id", activeWorldId);
+        localStorage.setItem(userActiveKey, activeWorldId);
       } else {
-        localStorage.removeItem("loreloom_active_world_id");
+        localStorage.removeItem(userActiveKey);
       }
     }
-  }, [worlds, activeWorldId, isLoaded]);
+  }, [worlds, activeWorldId, isLoaded, userId]);
 
   // Background sync/polling for active world with exponential backoff
   useEffect(() => {
-    if (!activeWorldId || activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
+    if (!activeWorldId) {
       return;
     }
 
     let isMounted = true;
-    let consecutiveFailures = 0;
-    let nextTimer: ReturnType<typeof setTimeout>;
+    let timerId: NodeJS.Timeout;
+    let pollInterval = 3000;
+    const maxInterval = 30000;
 
-    const pollOnce = () => {
-      if (!isMounted) return;
-      fetchWorld(activeWorldId).then((ok) => {
-        if (!isMounted) return;
-        if (ok) {
-          consecutiveFailures = 0;
-          nextTimer = setTimeout(pollOnce, 4000);
+    const pollActiveWorld = async () => {
+      const currentWorld = worlds.find((w) => w.id === activeWorldId);
+      const hasPendingChapters = currentWorld?.chapters.some(
+        (ch) => ch.illustrationSeed === "awaiting-synthesis" || ch.status === "generating"
+      );
+
+      if (hasPendingChapters || currentWorld?.status === "generating" || currentWorld?.status === "draft") {
+        const success = await fetchWorld(activeWorldId);
+        if (success) {
+          pollInterval = 3000;
         } else {
-          consecutiveFailures++;
-          // Exponential backoff: 8s, 16s, 32s... capped at 60s
-          const delay = Math.min(4000 * Math.pow(2, consecutiveFailures), 60000);
-          nextTimer = setTimeout(pollOnce, delay);
+          pollInterval = Math.min(pollInterval * 1.5, maxInterval);
         }
-      });
+      } else {
+        pollInterval = 10000;
+      }
+
+      if (isMounted) {
+        timerId = setTimeout(pollActiveWorld, pollInterval);
+      }
     };
 
-    // Fire immediately, then schedule subsequent polls with exponential backoff
-    pollOnce();
+    timerId = setTimeout(pollActiveWorld, pollInterval);
 
     return () => {
       isMounted = false;
-      clearTimeout(nextTimer);
+      clearTimeout(timerId);
     };
-  }, [activeWorldId, fetchWorld]);
+  }, [activeWorldId, worlds, fetchWorld]);
 
-  const activeWorld = worlds.find((w) => w.id === activeWorldId) || null;
+  const activeWorld = worlds.find((w) => w.id === activeWorldId) || (worlds.length > 0 ? worlds[0] : null);
 
-  // Sync protagonistName to global Zustand store whenever activeWorld changes
+  // Sync protagonist name to Zustand store whenever activeWorld changes
   useEffect(() => {
-    if (activeWorld) {
+    if (activeWorld?.protagonistName) {
       setHeroName(activeWorld.protagonistName);
     }
   }, [activeWorld, setHeroName]);
@@ -319,7 +307,8 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        walletAddress: WALLET_ADDRESS,
+        creatorId: userId || WALLET_ADDRESS,
+        walletAddress: userId || WALLET_ADDRESS,
         title: name,
         intake: {
           name,
@@ -349,238 +338,53 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     chapterId: string,
     options?: { narrativeContext?: string; styleLock?: string; aspectRatio?: string }
   ) => {
-    if (!activeWorldId || activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
-      setWorlds((prev) =>
-        prev.map((world) => {
-          if (world.id !== activeWorldId) return world;
-          return {
-            ...world,
-            chapters: world.chapters.map((ch) => {
-              if (ch.id !== chapterId) return ch;
-              const seeds = ["cyber-portal", "aether-engine", "quantum-matrix", "mystic-rune", "nebula-drift"];
-              const newSeed = seeds[Math.floor(Math.random() * seeds.length)];
-              return { ...ch, illustrationSeed: newSeed };
-            })
-          };
-        })
-      );
-      return;
-    }
-
-    try {
-      console.log(`[StoryContext] Optimistically setting chapter ${chapterId} status to text_ready / awaiting-synthesis...`);
-      setWorlds((prev) =>
-        prev.map((world) => {
-          if (world.id !== activeWorldId) return world;
-          return {
-            ...world,
-            chapters: world.chapters.map((ch) => {
-              if (ch.id !== chapterId) return ch;
-              return { 
-                ...ch, 
-                status: "text_ready",
-                illustrationSeed: "awaiting-synthesis" 
-              };
-            })
-          };
-        })
-      );
-
-      const body: Record<string, string> = {};
-      if (options?.narrativeContext) body.narrativeContext = options.narrativeContext;
-      if (options?.styleLock) body.styleLock = options.styleLock;
-      if (options?.aspectRatio) body.aspectRatio = options.aspectRatio;
-
-      console.log(`[StoryContext] Sending regenerate request for chapter ${chapterId}...`);
-      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters/${chapterId}/regenerate-image`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        const errBody = await response.json();
-        const errMsg = errBody.error ?? errBody.message ?? "Failed to regenerate chapter image";
-
-        if (response.status === 409 && errMsg.toLowerCase().includes("minted")) {
-          console.warn("Regenerate skipped — chapter was minted before the request completed.");
-          return;
-        }
-
-        throw new Error(errMsg);
-      }
-
-      console.log(`[StoryContext] Request succeeded, running immediate fetchWorld for sync...`);
-      await fetchWorld(activeWorldId);
-    } catch (error) {
-      // Only log as error if it's not a gracefully-handled minted race condition
-      if (error instanceof Error && error.message.toLowerCase().includes("minted")) {
-        console.warn("Regenerate skipped — chapter was minted.");
-      } else {
-        console.error("Error regenerating chapter image:", error);
-      }
-    }
-  };
-
-  const draftNewChapter = async (prompt: string, styleLock?: boolean, aspectRatio?: string) => {
     if (!activeWorldId) return;
 
-    if (activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
-      // Mock fallback behavior for sandbox worlds
-      setWorlds((prev) =>
-        prev.map((world) => {
-          if (world.id !== activeWorldId) return world;
-
-          const nextNum = world.chapters.length + 1;
-          const seeds = ["cyber-portal", "aether-engine", "quantum-matrix", "mystic-rune", "nebula-drift"];
-          const seed = seeds[(nextNum + world.chapters.length) % seeds.length];
-
-          const storyTemplates = [
-            `Taking a breath, ${world.protagonistName} pressed forward. The immediate surroundings hummed with energy as the command '${prompt}' took root.`,
-            `With the power of ${world.relicName} guiding the way, a sudden pathway illuminated, revealing secrets that had remained hidden for cycles.`,
-            `A voice echoed through the frequency, warning of the oncoming shift, but the commitment to the journey was already absolute.`,
-            `Shadows converged as ${world.protagonistName} navigated the treacherous terrain, ${world.relicName} glowing faintly in response to the command: "${prompt}".`,
-            `A fracture in reality shimmered before ${world.protagonistName}. The echo of "${prompt}" resonated through the canon, rewriting the threads of fate.`,
-            `Deep within the unknown, ${world.protagonistName} discovered a hidden node pulsing with energy. The directive "${prompt}" unlocked a cascade of vivid visions.`,
-            `The air crackled with raw narrative potential as ${world.protagonistName} stepped into the threshold. "${prompt}" was no longer just a command—it was the story itself.`,
-            `From the periphery, a new force responded to the weave. ${world.protagonistName} held ${world.relicName} high as the intent "${prompt}" carved a path through the void.`
-          ];
-          
-          const segmentIndex = nextNum < storyTemplates.length ? nextNum - 1 : (nextNum - 1) % storyTemplates.length;
-          const text = `${storyTemplates[segmentIndex]} Driven by the intention to "${prompt}", the story unfolded with dramatic speed. The visual canon crystallized further.`;
-
-          const newChapter: Chapter = {
-            id: `ch-${Date.now()}-${nextNum}`,
-            number: nextNum,
-            title: `Chapter ${nextNum}: ${prompt.slice(0, 20)}${prompt.length > 20 ? "..." : ""}`,
-            storyText: text,
-            illustrationSeed: seed,
-            isMinted: false,
-            prompt
-          };
-
-          return {
-            ...world,
-            chapters: [...world.chapters, newChapter]
-          };
-        })
-      );
-      return;
-    }
-
-    // Optimistically add draft chapter to local state for instant 0ms perceived creation latency
-    const currentChapters = activeWorld?.chapters || [];
-    const nextNum = currentChapters.length + 1;
-    const tempId = `temp-${Date.now()}`;
-    const tempChapter: Chapter = {
-      id: tempId,
-      number: nextNum,
-      title: `Chapter ${nextNum}`,
-      storyText: "AI is weaving the chapter story...",
-      illustrationSeed: "awaiting-synthesis",
-      isMinted: false,
-      prompt: prompt || "New Beat",
-      status: "draft"
-    };
-
-    setWorlds((prev) =>
-      prev.map((world) => {
-        if (world.id !== activeWorldId) return world;
-        return {
-          ...world,
-          chapters: [...world.chapters, tempChapter]
-        };
-      })
-    );
-
     try {
-      console.log(`[StoryContext] Requesting new draft chapter creation for world ${activeWorldId}...`);
-      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error ?? "Failed to create chapter");
-      }
-
-      console.log(`[StoryContext] Draft chapter created, fetching updated world details...`);
-      await fetchWorld(activeWorldId);
-    } catch (error) {
-      console.error("Error drafting new chapter:", error);
-    }
-  };
-
-  const commitChapterToCanon = async (chapterId: string) => {
-    if (!activeWorldId || activeWorldId.startsWith("world-neo-") || activeWorldId.startsWith("world-aetheria")) {
-      // Mock fallback
-      setWorlds((prev) =>
-        prev.map((world) => {
-          return {
-            ...world,
-            chapters: world.chapters.map((ch) => {
-              if (ch.id !== chapterId) return ch;
-
-              const hex = Math.floor(Math.random() * 65535).toString(16);
-              const mockTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-              const mockIpfs = "Qm" + Array.from({ length: 44 }, () => "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"[Math.floor(Math.random() * 62)]).join("");
-
-              return {
-                ...ch,
-                isMinted: true,
-                mintData: {
-                  tokenId: `0x${hex}`,
-                  txHash: mockTxHash,
-                  ipfsHash: mockIpfs,
-                  blockNumber: 20450000 + Math.floor(Math.random() * 10000),
-                  timestamp: new Date().toISOString()
-                }
-              };
-            })
-          };
-        })
+      const response = await fetch(
+        `${API_URL}/api/worlds/${activeWorldId}/chapters/${chapterId}/regenerate-image`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(options || {})
+        }
       );
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error ?? "Failed to confirm world");
+        throw new Error(err.error ?? "Failed to trigger image regeneration");
       }
 
-      // Background sync poll picks up the updated world.
-    } catch (error) {
-      console.error("Error committing world to canon:", error);
+      setWorlds((prev) =>
+        prev.map((world) => {
+          if (world.id !== activeWorldId) return world;
+          return {
+            ...world,
+            chapters: world.chapters.map((ch) =>
+              ch.id === chapterId ? { ...ch, illustrationSeed: "awaiting-synthesis", status: "generating" } : ch
+            )
+          };
+        })
+      );
+    } catch (err: any) {
+      console.warn("Failed backend image regeneration:", err);
     }
   };
 
-  const switchWorld = (worldId: string) => {
-    setActiveWorldId(worldId);
-  };
-
-  const reorderChapters = (chapterIds: string[]) => {
-    setWorlds((prev) =>
-      prev.map((world) => {
-        if (world.id !== activeWorldId) return world;
-        const reordered = chapterIds
-          .map((id) => world.chapters.find((ch) => ch.id === id))
-          .filter((ch): ch is Chapter => ch !== undefined);
-        return { ...world, chapters: reordered };
-      })
-    );
-  };
-
   const deleteChapter = async (chapterId: string) => {
-    if (!activeWorld) return;
+    if (!activeWorldId) return;
 
-    // Optimistically remove chapter locally first for instant zero-latency UI
+    try {
+      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters/${chapterId}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete chapter");
+      }
+    } catch (err) {
+      console.warn("Failed backend chapter deletion:", err);
+    }
+
     setWorlds((prev) =>
       prev.map((world) => {
         if (world.id !== activeWorldId) return world;
@@ -590,35 +394,84 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
       })
     );
+  };
 
-    // Mock worlds: return immediately
-    if (activeWorldId?.startsWith("world-neo-") || activeWorldId?.startsWith("world-aetheria")) {
-      return;
-    }
+  const draftNewChapter = async (prompt: string, styleLock?: boolean, aspectRatio?: string) => {
+    if (!activeWorldId) return;
 
-    // Real backend world: call DELETE endpoint
     try {
-      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters/${chapterId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" }
+      const response = await fetch(`${API_URL}/api/worlds/${activeWorldId}/chapters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, styleLock, aspectRatio })
       });
 
       if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: "Failed to delete chapter" }));
-        if (response.status === 404) return;
-        throw new Error(err.error ?? "Failed to delete chapter");
+        throw new Error("Failed to create chapter");
       }
-    } catch (error) {
-      console.error("Error deleting chapter:", error);
+
+      const data = await response.json();
+      fetchWorld(activeWorldId);
+    } catch (err) {
+      console.warn("Failed to draft chapter via backend API:", err);
     }
   };
 
+  const commitChapterToCanon = (chapterId: string) => {
+    setWorlds((prev) =>
+      prev.map((world) => {
+        if (world.id !== activeWorldId) return world;
+        return {
+          ...world,
+          chapters: world.chapters.map((ch) => {
+            if (ch.id !== chapterId) return ch;
+            return {
+              ...ch,
+              isMinted: true,
+              mintData: {
+                tokenId: `0x${Math.floor(Math.random() * 65535).toString(16)}`,
+                txHash: `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
+                ipfsHash: `Qm${Array.from({ length: 44 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`,
+                blockNumber: 19845000 + Math.floor(Math.random() * 1000),
+                timestamp: new Date().toISOString()
+              }
+            };
+          })
+        };
+      })
+    );
+  };
+
+  const switchWorld = (worldId: string) => {
+    setActiveWorldId(worldId);
+  };
+
   const deleteWorld = (worldId: string) => {
-    setWorlds((prev) => prev.filter((w) => w.id !== worldId));
-    if (activeWorldId === worldId) {
-      const remaining = worlds.filter((w) => w.id !== worldId);
-      setActiveWorldId(remaining.length > 0 ? remaining[0].id : null);
-    }
+    setWorlds((prev) => {
+      const nextWorlds = prev.filter((w) => w.id !== worldId);
+      if (activeWorldId === worldId) {
+        setActiveWorldId(nextWorlds.length > 0 ? nextWorlds[0].id : null);
+      }
+      return nextWorlds;
+    });
+  };
+
+  const reorderChapters = (chapterIds: string[]) => {
+    setWorlds((prev) =>
+      prev.map((world) => {
+        if (world.id !== activeWorldId) return world;
+        const chapterMap = new Map(world.chapters.map((ch) => [ch.id, ch]));
+        const reordered = chapterIds
+          .map((id) => chapterMap.get(id))
+          .filter((ch): ch is Chapter => ch !== undefined)
+          .map((ch, idx) => ({ ...ch, number: idx + 1 }));
+
+        return {
+          ...world,
+          chapters: reordered
+        };
+      })
+    );
   };
 
   return (
@@ -645,7 +498,7 @@ export const StoryProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export const useStory = () => {
   const context = useContext(StoryContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useStory must be used within a StoryProvider");
   }
   return context;

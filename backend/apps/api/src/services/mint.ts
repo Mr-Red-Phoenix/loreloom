@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { AiBlockedError, MintPendingError } from "../ai/errors.js";
 import { config } from "../config.js";
 import { getSupabaseAdmin } from "../db/supabase.js";
 import type { ChapterRow, MintTransactionRow, WorldRow } from "../db/types.js";
@@ -91,7 +92,7 @@ async function ensureMintTransaction(input: {
     throw new Error(transaction.errorMessage ?? `thirdweb Engine transaction ${transaction.status}.`);
   }
   if (transaction.status !== "mined" || !transaction.transactionHash) {
-    throw new Error(`Mint transaction is ${transaction.status}; it will be retried after Engine confirms it.`);
+    throw new MintPendingError(`Mint transaction is ${transaction.status}; waiting for Engine confirmation.`);
   }
 
   const confirmed = await upsertMint({

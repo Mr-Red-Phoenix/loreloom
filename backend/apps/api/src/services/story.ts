@@ -4,6 +4,7 @@ import { generateStructured } from "../ai/providers.js";
 import type { StructuredGenerateOutput, ToolDefinition } from "../ai/types.js";
 import type { AiProvider } from "../config.js";
 import type { ChapterRow, JsonValue, WorldRow } from "../db/types.js";
+import { fetchVisualKnowledge } from "./knowledge.js";
 
 const shortText = (max: number) => z.string().trim().min(1).max(max);
 const factsSchema = z.array(shortText(300)).max(12);
@@ -96,10 +97,16 @@ export async function generateGenesisDraft(input: {
   styleLock?: string | null;
   provider?: AiProvider;
 }): Promise<{ draft: GenesisDraft; generation: StructuredGenerateOutput; validationAttempt: number }> {
+  const userPrompt = typeof input.intake === "object" && input.intake !== null
+    ? String((input.intake as any).prompt || (input.intake as any).name || (input.intake as any).premise || "")
+    : "";
+  const grounding = await fetchVisualKnowledge(userPrompt);
+
   const prompt = [
     "Transform this raw Loreloom character intake into a locked canon package.",
     `Intake: ${JSON.stringify(input.intake)}`,
     `Requested style lock: ${input.styleLock ?? "none"}`,
+    grounding ? `Real-world Lore & Visual Grounding: ${grounding}` : "",
     "",
     "CRITICAL CANON GENERATION DIRECTIVES:",
     "1. You MUST read the user's prompt in the intake carefully and incorporate EVERY detail, theme, setting, character name, memory, and conflict they described.",
@@ -143,7 +150,7 @@ export async function generateChapterDraft(
     tool: chapterTool,
     schema: chapterOutputSchema,
     systemPrompt:
-      "You are Loreloom's Story engine. Write vivid, safe, original fiction. Return canon updates through the required tool only; never include past chapter text in the story bible.",
+      "You are Loreloom's Story engine. Write vivid, safe, original fiction. STRICT PROSE RULE: Never use hyphens (-) or em-dashes (—) in the story text prose. Write smooth, natural sentences using commas, periods, or conjunctions instead of dashes. Return canon updates through the required tool only; never include past chapter text in the story bible.",
     prompt,
     temperature: 0.75
   });

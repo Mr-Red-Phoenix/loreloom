@@ -9,8 +9,8 @@ import { Settings01 as Settings } from "@untitledui/icons";
 export function Navbar() {
   const pathname = usePathname();
   const isWorkspace = pathname?.startsWith("/workspace") || pathname?.startsWith("/dashboard");
-  if (isWorkspace) return null;
   const isLandingPage = pathname === "/";
+  if (isWorkspace || isLandingPage) return null;
   const isTransparentNav = isLandingPage;
 
   return (

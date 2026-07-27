@@ -10,7 +10,9 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
   const isDashboard = pathname?.startsWith("/dashboard");
   const isAuthRoute = pathname?.startsWith("/login") || pathname?.startsWith("/signup");
 
-  if (isWorkspace || isDashboard || isAuthRoute) {
+  const isLandingPage = pathname === "/";
+
+  if (isWorkspace || isDashboard || isAuthRoute || isLandingPage) {
     return <>{children}</>;
   }
 

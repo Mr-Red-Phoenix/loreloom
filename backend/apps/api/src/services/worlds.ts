@@ -421,3 +421,36 @@ export async function getChapterRow(chapterId: string): Promise<ChapterRow> {
 
   return data as ChapterRow;
 }
+
+export async function listUserWorlds(creatorIdOrWallet: string) {
+  const supabase = getSupabaseAdmin();
+  
+  let userId = creatorIdOrWallet;
+  if (creatorIdOrWallet.startsWith("0x")) {
+    const { data: user } = await supabase
+      .from("users")
+      .select("id")
+      .eq("wallet_address", creatorIdOrWallet.toLowerCase())
+      .maybeSingle();
+    if (user) {
+      userId = user.id;
+    }
+  }
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  if (!isUuid) {
+    return { worlds: [] };
+  }
+
+  const { data: worlds, error } = await supabase
+    .from("worlds")
+    .select("*, chapters(*)")
+    .eq("creator_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new HttpError(500, error.message);
+  }
+
+  return { worlds: worlds || [] };
+}

@@ -28,3 +28,10 @@ export class StructuredOutputError extends Error {
     this.name = "StructuredOutputError";
   }
 }
+
+export class MintPendingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MintPendingError";
+  }
+}

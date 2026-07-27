@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStory } from "../../context/StoryContext";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User01 as User,
@@ -488,6 +489,9 @@ export default function GenesisPage() {
     setProgress(15);
     setIsPortraitReady(false);
 
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const activeUserId = user?.id || localStorage.getItem("loreloom_active_wallet") || "0xa33Ebc28fF3b0135ba2DaC18990DDDc162Dc2467";
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
     try {
@@ -495,7 +499,8 @@ export default function GenesisPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          walletAddress: "0xa33Ebc28fF3b0135ba2DaC18990DDDc162Dc2467",
+          creatorId: activeUserId,
+          walletAddress: activeUserId,
           title: `${genesisData.style ? genesisData.style.split(' ')[0] : 'New'} Odyssey`,
           intake: {
             prompt: genesisData.prompt,

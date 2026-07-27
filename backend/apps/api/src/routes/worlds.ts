@@ -10,6 +10,7 @@ import {
   getCanon,
   getWorldDetails,
   intakeSchema,
+  listUserWorlds,
   regeneratePortrait,
   regenerateChapterImage,
   retryGenesisGeneration,
@@ -18,7 +19,9 @@ import {
 } from "../services/worlds.js";
 
 const createWorldSchema = z.object({
-  walletAddress: z.string(),
+  walletAddress: z.string().optional(),
+  creatorId: z.string().optional(),
+  userId: z.string().optional(),
   title: z.string().trim().min(1).optional(),
   intake: intakeSchema.optional(),
   styleLock: z.string().trim().min(1).optional(),
@@ -26,6 +29,19 @@ const createWorldSchema = z.object({
 });
 
 export const worldsRouter = Router();
+
+worldsRouter.get(
+  "/",
+  asyncRoute(async (req, res) => {
+    const creatorId = (req.query.creatorId || req.query.walletAddress || req.query.userId) as string | undefined;
+    if (!creatorId) {
+      res.json({ worlds: [] });
+      return;
+    }
+    const result = await listUserWorlds(creatorId);
+    res.json(result);
+  })
+);
 
 worldsRouter.post(
   "/",
@@ -37,7 +53,13 @@ worldsRouter.post(
       return;
     }
 
-    const result = await createWorld(parsed.data);
+    const userIdentifier = parsed.data.creatorId || parsed.data.userId || parsed.data.walletAddress;
+    if (!userIdentifier) {
+      res.status(400).json({ error: "creatorId or walletAddress is required." });
+      return;
+    }
+
+    const result = await createWorld({ ...parsed.data, walletAddress: userIdentifier });
     res.status(201).json(result);
   })
 );

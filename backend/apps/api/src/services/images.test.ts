@@ -28,6 +28,14 @@ test("chapter art generates from narrative even without a reference portrait", a
       );
     }
 
+    if (url.includes("duckduckgo.com")) {
+      return new Response(JSON.stringify({ AbstractText: "Test visual knowledge" }), { status: 200 });
+    }
+
+    if (url.includes("pollinations.ai")) {
+      return new Response(Buffer.from("fake image"), { status: 200, headers: { "content-type": "image/jpeg" } });
+    }
+
     throw new Error(`Unexpected fetch call: ${url}`);
   }) as typeof fetch;
 

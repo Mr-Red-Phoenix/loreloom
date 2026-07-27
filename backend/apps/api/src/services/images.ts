@@ -2,6 +2,7 @@ import { AiBlockedError, ProviderRequestError, ProviderSetupError } from "../ai/
 import { config } from "../config.js";
 import type { ChapterRow, WorldRow } from "../db/types.js";
 import { pinImage } from "./ipfs.js";
+import { fetchVisualKnowledge } from "./knowledge.js";
 
 type AspectRatio = "16:9" | "1:1" | "9:16";
 
@@ -17,8 +18,9 @@ type GeminiImageResponse = {
 
 export async function generatePortraitUrl(world: WorldRow) {
   const portraitPrompt = portraitPromptFromWorld(world);
+  const grounding = await fetchVisualKnowledge(world.title || world.style_lock || "");
   return generateImage({
-    prompt: `${portraitPrompt}\nCreate a single polished reference portrait. Preserve these locked style keywords: ${world.style_lock ?? "cinematic storybook"}.`,
+    prompt: `${portraitPrompt}\n${grounding ? `Visual grounding: ${grounding}\n` : ""}Create a single polished reference portrait. Preserve these locked style keywords: ${world.style_lock ?? "cinematic storybook"}.`,
     name: `loreloom-${world.id}-portrait.png`
   });
 }
@@ -42,9 +44,12 @@ export async function generateChapterImageUrl(
   }
 
   const narrativeBeat = overrides?.narrativeContext ?? chapter.scene_description ?? "";
+  const grounding = await fetchVisualKnowledge(world.title || narrativeBeat.slice(0, 80));
+
   const prompt = [
     `Cinematic illustration for this exact Loreloom chapter scene.`,
     `Style lock: ${styleLock}.`,
+    grounding ? `Real-world visual anchors: ${grounding}.` : "",
     characterHint ? `Character reference: ${characterHint}.` : "",
     `Scene description: ${narrativeBeat}`.trim(),
     world.reference_image_url ? "Use the supplied reference image to preserve the protagonist's identity, visual traits, and art direction." : "",
@@ -125,10 +130,26 @@ async function generateGeminiImage(input: { prompt: string; referenceImageUrl?: 
   return pinImage({ bytes: Buffer.from(image.data, "base64"), mimeType: image.mimeType, name: input.name });
 }
 
+async function generatePollinationsImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {
+  const dims = aspectToDimensions(input.aspectRatio ?? "1:1");
+  const cleanPrompt = encodeURIComponent(input.prompt.slice(0, 400));
+  const seed = Math.floor(Math.random() * 1000000);
+  const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${dims.width}&height=${dims.height}&nologo=true&seed=${seed}`;
+
+  const response = await fetch(imageUrl);
+  if (!response.ok) {
+    throw new Error(`Pollinations AI error: ${response.statusText}`);
+  }
+
+  const buffer = await response.arrayBuffer();
+  const mimeType = response.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+  return pinImage({ bytes: Buffer.from(buffer), mimeType, name: input.name });
+}
+
 async function generateImage(input: { prompt: string; referenceImageUrl?: string; name: string; aspectRatio?: AspectRatio }) {
   console.log(`[images] Constructing image generation for prompt: "${input.prompt.slice(0, 100)}..."`);
 
-  // Try Gemini first (with reference image for character consistency)
+  // 1. Try Gemini first (if configured and valid)
   if (config.gemini.apiKey) {
     try {
       console.log("[images] Attempting image generation via Gemini API...");
@@ -136,11 +157,11 @@ async function generateImage(input: { prompt: string; referenceImageUrl?: string
       console.log("[images] Gemini image generation succeeded:", url);
       return url;
     } catch (err) {
-      console.error("[images] Gemini generation failed, falling back...", err);
+      console.warn("[images] Gemini generation failed, falling back...", err);
     }
   }
 
-  // Try Stability AI next
+  // 2. Try Stability AI next
   if (config.stability.apiKey) {
     try {
       console.log("[images] Attempting image generation via Stability API...");
@@ -148,34 +169,22 @@ async function generateImage(input: { prompt: string; referenceImageUrl?: string
       console.log("[images] Stability image generation succeeded:", url);
       return url;
     } catch (err) {
-      console.error("[images] Stability generation failed, falling back...", err);
+      console.warn("[images] Stability generation failed, falling back...", err);
     }
   }
 
-  // Try NVIDIA (no reference image support)
-  if (config.nvidia.apiKey) {
-    try {
-      console.log("[images] Attempting image generation via NVIDIA API...");
-      const url = await generateNvidiaImage(input);
-      console.log("[images] NVIDIA image generation succeeded:", url);
-      return url;
-    } catch (err) {
-      console.error("[images] NVIDIA generation failed, falling back...", err);
-    }
+  // 3. Try Pollinations AI FLUX Engine (Free, instant, unlimited AI image generation matching exact prompt!)
+  try {
+    console.log("[images] Generating relevant AI artwork via Pollinations FLUX engine...");
+    const url = await generatePollinationsImage(input);
+    console.log("[images] Pollinations FLUX image generation succeeded:", url);
+    return url;
+  } catch (err) {
+    console.warn("[images] Pollinations generation failed, falling back...", err);
   }
 
-  if (config.huggingface.apiKey) {
-    try {
-      console.log("[images] Attempting image generation via Hugging Face API...");
-      const url = await generateHuggingFaceImage(input);
-      console.log("[images] Hugging Face image generation succeeded:", url);
-      return url;
-    } catch (err) {
-      console.error("[images] Hugging Face generation failed, falling back...", err);
-    }
-  }
-
-  throw new ProviderRequestError("Image Generation", "All configured image generation providers failed or none are configured", 500);
+  console.warn("[images] All AI image providers failed. Falling back to placeholder image...");
+  return placeholderImage(input.prompt);
 }
 
 async function generateStabilityImage(input: { prompt: string; name: string; aspectRatio?: AspectRatio }) {

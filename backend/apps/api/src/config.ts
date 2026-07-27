@@ -62,11 +62,11 @@ export const config = {
     apiKey: process.env.STABILITY_API_KEY
   },
   ipfs: {
-    mode: process.env.IPFS_MODE ?? "mock",
+    mode: process.env.IPFS_MODE ?? "pinata",
     pinataJwt: process.env.PINATA_JWT
   },
   mint: {
-    mode: process.env.MINT_MODE ?? "mock",
+    mode: process.env.MINT_MODE ?? "thirdweb-transactions",
     thirdwebClientId: process.env.THIRDWEB_CLIENT_ID,
     thirdwebSecretKey: process.env.THIRDWEB_SECRET_KEY,
     thirdwebVaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN,

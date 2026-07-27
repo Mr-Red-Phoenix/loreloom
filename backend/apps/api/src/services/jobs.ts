@@ -148,10 +148,28 @@ export async function markJobSucceeded(jobId: string, checkpoint?: JsonValue) {
 
 export async function markJobFailed(job: GenerationJobRow, error: unknown) {
   const supabase = getSupabaseAdmin();
+  const message = error instanceof Error ? error.message : String(error);
+  const isMintPending = error instanceof Error && (error.name === "MintPendingError" || error.message.includes("waiting for Engine confirmation"));
+
+  if (isMintPending) {
+    const { error: updateError } = await supabase
+      .from("generation_jobs")
+      .update({
+        status: "retrying",
+        run_at: new Date(Date.now() + 5000).toISOString(),
+        error_message: message
+      })
+      .eq("id", job.id);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+    return;
+  }
+
   const retryCount = job.retry_count + 1;
   const shouldRetry = retryCount <= job.max_retries;
   const retryDelaySeconds = Math.min(60, 2 ** retryCount * 5);
-  const message = error instanceof Error ? error.message : String(error);
 
   const { error: updateError } = await supabase
     .from("generation_jobs")

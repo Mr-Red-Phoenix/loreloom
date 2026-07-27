@@ -176,7 +176,9 @@ function SortableChapterCard({
             <LucideTrash2 size={14} strokeWidth={1.8} className="text-black dark:text-white/80" />
           </button>
         ) : (
-          <LucideDatabase size={14} className="text-emerald-500 shrink-0" strokeWidth={1.5} title="On-Chain" />
+          <span title="On-Chain">
+            <LucideDatabase size={14} className="text-emerald-500 shrink-0" strokeWidth={1.5} />
+          </span>
         )}
       </div>
     </div>
@@ -241,14 +243,15 @@ function WorkspaceContent() {
     if (!activeWorld) return;
     const prevChapters = prevChaptersRef.current;
     
-    activeWorld.chapters.forEach((ch) => {
+    activeWorld.chapters.forEach((ch, idx) => {
       const prevCh = prevChapters.find((p) => p.id === ch.id);
       if (prevCh) {
+        const displayNum = idx + 1;
         if (prevCh.status === "text_ready" && ch.status === "image_ready") {
-          setToast({ message: `Chapter ${ch.number} image generated successfully!`, type: "success" });
+          setToast({ message: `Chapter ${displayNum} image generated successfully!`, type: "success" });
         }
         if (prevCh.status === "text_ready" && ch.status === "failed") {
-          setToast({ message: `Chapter ${ch.number} image generation failed.`, type: "error" });
+          setToast({ message: `Chapter ${displayNum} image generation failed.`, type: "error" });
         }
       }
     });
@@ -302,13 +305,16 @@ function WorkspaceContent() {
     ws.persistToSession();
   }, [selectedChapterId, newChapterPrompt, styleLock, aspectRatio, canvasFullscreen, chapterOrder, generating]);
 
-  // Sync worldId from URL
+  // Sync worldId from URL & ensure backend details are loaded
   useEffect(() => {
-    if (worldIdParam && (!activeWorld || worldIdParam !== activeWorld.id)) {
-      ws.resetWorkspace();
-      switchWorld(worldIdParam);
+    if (worldIdParam) {
+      if (!activeWorld || worldIdParam !== activeWorld.id) {
+        ws.resetWorkspace();
+        switchWorld(worldIdParam);
+        fetchWorld(worldIdParam);
+      }
     }
-  }, [worldIdParam]);
+  }, [worldIdParam, fetchWorld]);
 
   const autoGenRef = useRef(false);
 
@@ -559,10 +565,19 @@ function WorkspaceContent() {
 
   if (!activeWorld) {
     return (
-      <div style={{ ...s.workspace, ...s.centered }}>
+      <div style={{ ...s.workspace, ...s.centered, flexDirection: "column", gap: 16 }}>
         <div style={s.ambientLeft} />
         <div style={s.ambientRight} />
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#B026FF", boxShadow: "0 0 20px rgba(176,38,255,0.6)" }} />
+        <div className="flex items-center gap-3">
+          <LucideLoader2 className="w-6 h-6 text-purple-500 animate-spin" />
+          <span className="text-sm font-medium text-purple-300 tracking-wide">Loading workspace...</span>
+        </div>
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="mt-4 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-all cursor-pointer"
+        >
+          Return to Dashboard
+        </button>
       </div>
     );
   }
@@ -751,11 +766,6 @@ function WorkspaceContent() {
                     : "Edit Narrative"
                   : "Weave a Beat"}
               </span>
-              {narrativeContext && !isGenerateImageIntent(newChapterPrompt) && selectedChapter?.storyText && (
-                <span className="bg-purple-950/40 border border-purple-500/20 text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-mono ml-2">
-                  AI EDIT
-                </span>
-              )}
               {isGenerateImageIntent(newChapterPrompt) && (
                 <span className="bg-cyan-950/40 border border-cyan-500/20 text-cyan-300 text-[10px] px-2 py-0.5 rounded-full font-mono ml-2">
                   IMAGE
@@ -818,15 +828,14 @@ function WorkspaceContent() {
                 <button 
                   type="button" 
                   onClick={() => ws.setStyleLock(!styleLock)} 
-                  className={`h-7 px-2 rounded-md flex items-center justify-center gap-1 text-[10px] font-mono border transition-all cursor-pointer
+                  className={`h-7 w-7 rounded-md flex items-center justify-center text-[10px] font-mono border transition-all cursor-pointer
                     ${styleLock 
                       ? "bg-purple-100 border-purple-300 text-purple-700 dark:bg-purple-950/50 dark:border-purple-500/30 dark:text-purple-300" 
                       : "bg-gray-100 border-gray-200 text-gray-500 hover:text-gray-900 dark:bg-white/[0.02] dark:border-white/10 dark:text-white/50 dark:hover:text-white"
                     }`}
                   title={styleLock ? "Style-Lock ON" : "Style-Lock OFF"}
                 >
-                  <LucideLock size={12} strokeWidth={1.5} />
-                  <span>LOCK</span>
+                  <LucideLock size={13} strokeWidth={1.5} />
                 </button>
                 <div className="relative flex items-center">
                   <button
@@ -837,7 +846,7 @@ function WorkspaceContent() {
                       borderColor: "hsl(var(--border))",
                       color: "hsl(var(--foreground))",
                     }}
-                    className="h-7 pl-2.5 pr-2 flex justify-between items-center gap-1 rounded-md text-xs font-mono border cursor-pointer focus:outline-none focus:border-cyan-500/40 transition-all min-w-[115px] relative z-20"
+                    className="h-7 px-3.5 flex justify-between items-center gap-2 rounded-md text-xs font-mono border cursor-pointer focus:outline-none focus:border-cyan-500/40 transition-all min-w-[135px] relative z-20"
                   >
                     <span style={{ color: "hsl(var(--foreground))" }}>{aspectRatio === "16:9" ? "16:9 (1024x576)" : aspectRatio === "1:1" ? "1:1 (1024x1024)" : "9:16 (576x1024)"}</span>
                     <ChevronDown size={14} style={{ color: "var(--text-muted)", flexShrink: 0 }} />

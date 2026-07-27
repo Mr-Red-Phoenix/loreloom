@@ -145,6 +145,11 @@ export function SidebarSectionDividersDemo() {
             icon: LayersThree01,
           },
           {
+            label: "On-Chain Provenance",
+            href: activeWorld?.id ? `/workspace/provenance?worldId=${activeWorld.id}` : "/workspace/provenance",
+            icon: Stars01,
+          },
+          {
             label: "Support & Docs",
             href: "/workspace/shareable",
             icon: HelpCircle,

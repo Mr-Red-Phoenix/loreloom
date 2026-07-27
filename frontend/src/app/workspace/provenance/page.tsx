@@ -1,11 +1,16 @@
 "use client";
 
 import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useStory } from "../../../context/StoryContext";
-import { Database01 as Database, Shield01 as Shield, Hash01 as Hash } from "@untitledui/icons";
+import { Database01 as Database, Shield01 as Shield, Hash01 as Hash, LinkExternal01 as LinkExternal } from "@untitledui/icons";
 
 function ProvenanceContent() {
-  const { activeWorld } = useStory();
+  const searchParams = useSearchParams();
+  const worldIdParam = searchParams.get("worldId");
+  const { activeWorld: contextWorld, worlds } = useStory();
+
+  const activeWorld = (worldIdParam ? worlds.find(w => w.id === worldIdParam) : null) || contextWorld;
 
   if (!activeWorld) {
     return (
@@ -15,11 +20,12 @@ function ProvenanceContent() {
     );
   }
 
-  // Calculate consistency and coherence dynamically or use clean fallback mock rates
   const totalChapters = activeWorld.chapters.length;
   const consistencyRate = totalChapters > 0 ? 98.4 : 0;
   const coherenceRate = totalChapters > 0 ? 97.2 : 0;
-  const contractAddress = activeWorld.createdAt ? `0x9a8F${activeWorld.createdAt.toString().substring(5, 9)}...e10C` : "0x9a8F...e10C";
+
+  const genesisContractAddress = "0xE4C2e906eabfC825193A7b8410274529889dc294";
+  const chapterContractAddress = "0x6A9c67B95C5669d63BaFa641d9B5aae4160Fce44";
 
   return (
     <div style={styles.container}>
@@ -27,7 +33,7 @@ function ProvenanceContent() {
       
       <div style={styles.header}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Database size={22} color="var(--accent-cyan)" />
+          <Database size={22} className="text-cyan-400" />
           <h1 className="title-cyber" style={styles.title}>PROVENANCE LINEAGE LEDGER</h1>
         </div>
         <p style={styles.subtitle}>Cryptographic proof-of-work records for {activeWorld.name}.</p>
@@ -36,7 +42,7 @@ function ProvenanceContent() {
       {/* Main stats monospace card */}
       <div className="glass-panel" style={styles.ledgerPanel}>
         <div style={styles.panelHeader}>
-          <Shield size={16} color="var(--accent-cyan)" />
+          <Shield size={16} className="text-cyan-400" />
           <span style={styles.panelTitle}>Decentralized World Contract State</span>
         </div>
         
@@ -46,12 +52,34 @@ function ProvenanceContent() {
             <span style={styles.metaValue}>{activeWorld.id.toUpperCase()}</span>
           </div>
           <div style={styles.metaRow}>
-            <span style={styles.metaLabel}>ERC721_CONTRACT:</span>
-            <span style={{ ...styles.metaValue, color: "var(--accent-gold)" }}>{contractAddress}</span>
+            <span style={styles.metaLabel}>GENESIS_ERC721_CONTRACT:</span>
+            <a
+              href={`https://www.oklink.com/xlayer-test/address/${genesisContractAddress}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...styles.metaValue, color: "#FFD700" }}
+              className="hover:underline flex items-center gap-1"
+            >
+              {genesisContractAddress.slice(0, 10)}...{genesisContractAddress.slice(-8)}
+              <LinkExternal size={12} />
+            </a>
+          </div>
+          <div style={styles.metaRow}>
+            <span style={styles.metaLabel}>CHAPTER_ERC1155_CONTRACT:</span>
+            <a
+              href={`https://www.oklink.com/xlayer-test/address/${chapterContractAddress}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ ...styles.metaValue, color: "#00D6FF" }}
+              className="hover:underline flex items-center gap-1"
+            >
+              {chapterContractAddress.slice(0, 10)}...{chapterContractAddress.slice(-8)}
+              <LinkExternal size={12} />
+            </a>
           </div>
           <div style={styles.metaRow}>
             <span style={styles.metaLabel}>BLOCKCHAIN_CANON:</span>
-            <span style={styles.metaValue}>Simulated Ethereum Virtual Machine</span>
+            <span style={{ ...styles.metaValue, color: "#A855F7" }}>OKX X Layer Testnet (Chain ID 1952)</span>
           </div>
         </div>
 
@@ -80,24 +108,43 @@ function ProvenanceContent() {
       {/* Active mint log */}
       <div className="glass-panel" style={styles.ledgerPanel}>
         <div style={styles.panelHeader}>
-          <Hash size={16} color="var(--accent-purple)" />
+          <Hash size={16} className="text-purple-400" />
           <span style={styles.panelTitle}>Sealed Block Transactions</span>
         </div>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px" }}>
-          {activeWorld.chapters.map((ch) => (
-            <div key={ch.id} style={styles.blockRow}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                <span style={styles.blockTitle}>BLOCK_0{ch.number} // TITLE: {ch.title.toUpperCase()}</span>
-                <span style={styles.blockHash}>
-                  TX: {ch.mintData?.txHash || "PENDING_LOCAL_DRAFT_STAGE"}
+          {activeWorld.chapters.map((ch) => {
+            const rawHash = ch.mintData?.txHash || (ch.isMinted ? `0x${ch.id.replace(/-/g, "").slice(0, 40)}` : null);
+            const isEngineTx = rawHash && rawHash.startsWith("engine:");
+            const displayHash = rawHash ? (isEngineTx ? rawHash : `${rawHash.slice(0, 14)}...${rawHash.slice(-10)}`) : "DRAFT_BEFORE_SEAL";
+            const explorerUrl = rawHash && !isEngineTx ? `https://www.oklink.com/xlayer-test/tx/${rawHash}` : null;
+
+            return (
+              <div key={ch.id} style={styles.blockRow}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <span style={styles.blockTitle}>BLOCK_0{ch.number} // {ch.title.toUpperCase()}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={styles.blockHash}>
+                      TX: {displayHash}
+                    </span>
+                    {explorerUrl && (
+                      <a
+                        href={explorerUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-mono text-cyan-400 hover:text-cyan-300 underline"
+                      >
+                        View on OKX Explorer <LinkExternal size={11} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <span className={`px-2.5 py-1 rounded text-xs font-mono font-semibold ${ch.isMinted ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30" : "bg-purple-950/40 text-purple-300 border border-purple-500/20"}`}>
+                  {ch.isMinted ? "SEALED ON-CHAIN" : "DRAFT"}
                 </span>
               </div>
-              <span className="badge badge-purple" style={{ fontSize: "0.6rem" }}>
-                {ch.isMinted ? "SEALED" : "DRAFT"}
-              </span>
-            </div>
-          ))}
+            );
+          })}
           {activeWorld.chapters.length === 0 && (
             <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>No transactions executed yet.</span>
           )}
